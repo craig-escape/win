@@ -1504,26 +1504,29 @@
     });
 
     // Step 2: Handle category search
-    categoryInput.addEventListener("keyup", (event) => {
-      const searchQuery = categoryInput.value.toLowerCase();
+categoryInput.addEventListener("input", (event) => {
+  const searchQuery = categoryInput.value.toLowerCase();
+
+  if (event.inputType === "insertText" && searchQuery.trim() === "") {
+    // Reset the list if the field becomes empty (e.g., space or cleared text)
+    displayResults(currentData);
+    return;
+  }
 
   if (event.key === "Enter" || event.key === " ") {
-        // Clear the search box and reset the list on Enter
-        categoryInput.value = "";
-        displayResults(currentData); // Reset to full list
-        return;
-      }
+    // Clear the search box and reset the list on Enter or Space
+    categoryInput.value = "";
+    displayResults(currentData); // Reset to full list
+    return;
+  }
 
-      // Filter results dynamically
-      const filteredData = Object.keys(currentData)
-        .filter(category => category.toLowerCase().includes(searchQuery))
-        .reduce((obj, category) => {
-          obj[category] = currentData[category];
-          return obj;
-        }, {});
+  // Update results based on search query
+  const filteredResults = currentData.filter((item) =>
+    item.toLowerCase().includes(searchQuery)
+  );
+  displayResults(filteredResults);
+});
 
-      displayResults(filteredData);
-    });
 
     // Function to display results
     function displayResults(data) {
