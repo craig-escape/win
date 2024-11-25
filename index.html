@@ -1484,59 +1484,18 @@
 
     };
 
-  const letterInput = document.getElementById("letterInput");
+// DOM elements
+const letterInput = document.getElementById("letterInput");
 const categoryInput = document.getElementById("categoryInput");
 const resultsDiv = document.getElementById("results");
 
 let currentData = {}; // Store the data for the selected letter
 
-// Step 1: Handle letter input
-letterInput.addEventListener("input", () => {
-  const letter = letterInput.value.toUpperCase().trim();
-  if (data[letter]) {
-    currentData = data[letter];
-    displayResults(currentData); // Show all categories and answers for the selected letter
-    categoryInput.focus(); // Automatically focus on the second text box
-  } else {
-    resultsDiv.innerHTML = "<p>No data available for this letter.</p>";
-    currentData = {};
-  }
-});
-
-// Step 2: Handle category search
-categoryInput.addEventListener("input", () => {
-  const searchQuery = categoryInput.value.toLowerCase().trim();
-
-  if (!searchQuery) {
-    // Reset the list if the field becomes empty
-    displayResults(currentData);
-    return;
-  }
-
-  // Update results based on search query
-  const filteredResults = Object.fromEntries(
-    Object.entries(currentData).filter(([category, answers]) =>
-      category.toLowerCase().includes(searchQuery) ||
-      answers.some(answer => answer.toLowerCase().includes(searchQuery))
-    )
-  );
-  displayResults(filteredResults);
-});
-
-// Step 3: Handle reset on Enter or Space
-categoryInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault(); // Prevent default behavior of spacebar
-    categoryInput.value = ""; // Clear the input field
-    displayResults(currentData); // Reset to the full list
-  }
-});
-
 // Function to display results
 function displayResults(data) {
   resultsDiv.innerHTML = ""; // Clear previous results
 
-  if (Object.keys(data).length === 0) {
+  if (!data || Object.keys(data).length === 0) {
     resultsDiv.innerHTML = "<p>No matching categories found.</p>";
     return;
   }
@@ -1552,3 +1511,46 @@ function displayResults(data) {
     resultsDiv.appendChild(resultItem);
   });
 }
+
+// Handle letter input
+letterInput.addEventListener("keyup", () => {
+  const letter = letterInput.value.toUpperCase();
+  if (data[letter]) {
+    currentData = data[letter];
+    displayResults(currentData); // Show all categories for the selected letter
+    categoryInput.focus(); // Focus on the category input box
+  } else {
+    resultsDiv.innerHTML = "<p>No data available for this letter.</p>";
+    currentData = {};
+  }
+});
+
+// Handle category search
+categoryInput.addEventListener("input", () => {
+  const searchQuery = categoryInput.value.toLowerCase();
+
+  if (searchQuery.trim() === "") {
+    displayResults(currentData); // Reset to full list
+    return;
+  }
+
+  // Filter results based on search query
+  const filteredResults = Object.keys(currentData)
+    .filter((category) => category.toLowerCase().includes(searchQuery))
+    .reduce((obj, key) => {
+      obj[key] = currentData[key];
+      return obj;
+    }, {});
+
+  displayResults(filteredResults);
+});
+
+// Handle Space and Enter for clearing
+categoryInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault(); // Prevent default behavior
+    categoryInput.value = ""; // Clear the input box
+    displayResults(currentData); // Reset to full list
+  }
+});
+</script>
