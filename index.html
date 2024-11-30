@@ -20,7 +20,6 @@
       padding: 10px;
       background-color: #f8f9fa;
       border-bottom: 1px solid #ddd;
-      justify-content: flex-start;
       gap: 10px;
     }
     .controls input, .controls button {
@@ -42,36 +41,35 @@
       overflow-y: auto;
       padding: 10px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0; /* No gap between results to mimic a table/spreadsheet */
     }
     .result-pair {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      border: 1px solid #ddd;
-      padding: 10px;
-      background-color: #fff;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid #ddd;
+      padding: 5px;
+      align-items: center;
     }
     .category {
       font-weight: bold;
-      border-right: 1px solid #ddd;
-      padding-right: 10px;
+      text-align: left;
     }
     .answer {
+      text-align: left;
       color: #333;
-      padding-left: 10px;
+    }
+    .first-letter {
+      grid-column: 1 / -1;
+      background-color: #f4f4f4;
+      font-weight: bold;
+      padding: 5px 10px;
+      border: 1px solid #ddd;
+      margin: 5px 0;
     }
     @media (max-width: 768px) {
       .result-pair {
         grid-template-columns: 1fr; /* Stack category and answer on smaller screens */
-      }
-      .category {
-        border-right: none;
-        padding-right: 0;
-      }
-      .answer {
-        padding-left: 0;
       }
     }
   </style>
@@ -92,7 +90,7 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsDiv = document.getElementById("results");
 
-      // Function to display results in a grid
+      // Display results alphabetized in columns with first letter headers
       function displayResults(letter, categoryFilter = "") {
         resultsDiv.innerHTML = ""; // Clear previous results
         const filteredData = {};
@@ -113,8 +111,21 @@
           return;
         }
 
-        // Generate category-answer pairs
+        // Group results by the first letter
+        let currentLetter = null;
         sortedCategories.forEach(category => {
+          const firstLetter = category[0].toUpperCase();
+
+          // Add a new "first-letter" header if the first letter changes
+          if (firstLetter !== currentLetter) {
+            currentLetter = firstLetter;
+            const firstLetterDiv = document.createElement("div");
+            firstLetterDiv.className = "first-letter";
+            firstLetterDiv.textContent = currentLetter;
+            resultsDiv.appendChild(firstLetterDiv);
+          }
+
+          // Create category-answer pair
           const resultPair = document.createElement("div");
           resultPair.className = "result-pair";
 
@@ -139,7 +150,14 @@
         categoryInput.style.display = showInput ? "none" : "inline-block";
       }
 
-      // Event listeners
+      // Event listeners for clearing search field on space, enter, or backspace
+      categoryInput.addEventListener("keydown", (e) => {
+        if (e.key === " " || e.key === "Enter" || e.key === "Backspace") {
+          categoryInput.value = "";
+          displayResults(letterInput.value.toUpperCase());
+        }
+      });
+
       letterInput.addEventListener("input", () => {
         if (letterInput.value) {
           toggleControls(false);
