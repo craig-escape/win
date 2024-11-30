@@ -40,32 +40,42 @@
       flex: 1;
       overflow-y: auto;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Fixed column widths */
-      gap: 0;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+      padding: 20px;
       align-content: start;
     }
-    .row {
-      display: grid;
-      grid-template-columns: 50px 1fr 1fr;
-      border-bottom: 1px solid #ddd;
-      height: 40px;
-      align-items: center;
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
-    .row:nth-child(even) {
-      background-color: #f8f8f8;
-    }
-    .cell {
-      padding: 5px;
-      border-right: 1px solid #ddd;
-      text-align: left;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .first-letter {
+    .letter-group {
+      background-color: #e4e4e4;
+      padding: 10px;
       font-weight: bold;
       text-align: center;
-      background-color: #e4e4e4;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .item:nth-child(odd) {
+      background-color: #f9f9f9;
+    }
+    .category {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .answer {
+      text-align: right;
+      color: #555;
     }
     @media (max-width: 768px) {
       .results {
@@ -90,7 +100,7 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsDiv = document.getElementById("results");
 
-      // Function to display results in a grid
+      // Function to display results alphabetized in columns with letter groups
       function displayResults(letter, categoryFilter = "") {
         resultsDiv.innerHTML = ""; // Clear previous results
         const filteredData = {};
@@ -111,34 +121,48 @@
           return;
         }
 
-        // Group results by the first letter and create rows
         let currentLetter = null;
-        sortedCategories.forEach(category => {
+        let columnDiv = document.createElement("div");
+        columnDiv.className = "column";
+
+        // Group results by the first letter
+        sortedCategories.forEach((category, index) => {
           const firstLetter = category[0].toUpperCase();
 
-          // Add a new "first-letter" row if the first letter changes
+          // Add a new "letter group" header if the first letter changes
           if (firstLetter !== currentLetter) {
             currentLetter = firstLetter;
-            const firstLetterRow = document.createElement("div");
-            firstLetterRow.className = "row";
-            firstLetterRow.innerHTML = `
-              <div class="cell first-letter">${currentLetter}</div>
-              <div class="cell"></div>
-              <div class="cell"></div>
-            `;
-            resultsDiv.appendChild(firstLetterRow);
+
+            if (index > 0) {
+              resultsDiv.appendChild(columnDiv); // Add the completed column
+              columnDiv = document.createElement("div");
+              columnDiv.className = "column";
+            }
+
+            const letterGroupDiv = document.createElement("div");
+            letterGroupDiv.className = "letter-group";
+            letterGroupDiv.textContent = currentLetter;
+            columnDiv.appendChild(letterGroupDiv);
           }
 
-          // Create a row for category-answer pairs
-          const resultRow = document.createElement("div");
-          resultRow.className = "row";
-          resultRow.innerHTML = `
-            <div class="cell"></div>
-            <div class="cell">${category}</div>
-            <div class="cell">${filteredData[category][0] || "N/A"}</div>
-          `;
-          resultsDiv.appendChild(resultRow);
+          // Create category-answer pair
+          const itemDiv = document.createElement("div");
+          itemDiv.className = "item";
+
+          const categoryDiv = document.createElement("div");
+          categoryDiv.className = "category";
+          categoryDiv.textContent = category;
+
+          const answerDiv = document.createElement("div");
+          answerDiv.className = "answer";
+          answerDiv.textContent = filteredData[category][0] || "N/A";
+
+          itemDiv.appendChild(categoryDiv);
+          itemDiv.appendChild(answerDiv);
+          columnDiv.appendChild(itemDiv);
         });
+
+        resultsDiv.appendChild(columnDiv); // Add the last column
       }
 
       // Show/hide controls
@@ -148,14 +172,7 @@
         categoryInput.style.display = showInput ? "none" : "inline-block";
       }
 
-      // Event listeners for search field behavior
-      categoryInput.addEventListener("keydown", (e) => {
-        if ([" ", "Enter", "Backspace"].includes(e.key)) {
-          categoryInput.value = "";
-          displayResults(letterInput.value.toUpperCase());
-        }
-      });
-
+      // Event listeners
       letterInput.addEventListener("input", () => {
         if (letterInput.value) {
           toggleControls(false);
