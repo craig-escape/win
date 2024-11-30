@@ -36,14 +36,22 @@
     .controls button:hover {
       background-color: #0056b3;
     }
+    .results-container {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 10px;
+    }
     .results {
       flex: 1;
-      overflow-y: auto;
+      min-width: 300px; /* Adjust based on available screen size */
+      max-width: 300px;
       display: grid;
       grid-template-columns: auto 1fr 1fr;
       gap: 0;
-      padding: 20px;
       align-items: start;
+      border-right: 1px solid #ddd;
+      padding-right: 10px;
     }
     .row {
       display: contents; /* Allow proper alignment in a grid-based structure */
@@ -52,7 +60,7 @@
       background-color: #ddd;
       font-weight: bold;
       text-align: center;
-      padding: 10px;
+      padding: 5px;
       color: #333;
       border: 1px solid #ccc;
     }
@@ -61,17 +69,21 @@
     }
     .category {
       font-weight: bold;
-      padding: 10px;
+      padding: 5px;
       border: 1px solid #ddd;
+      font-size: 12px;
+      text-align: left;
     }
     .answer {
-      padding: 10px;
+      padding: 5px;
       border: 1px solid #ddd;
       color: #555;
+      font-size: 12px;
+      text-align: left;
     }
     @media (max-width: 768px) {
       .results {
-        grid-template-columns: auto 1fr;
+        max-width: 250px;
       }
     }
   </style>
@@ -82,7 +94,7 @@
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
-  <div id="results" class="results"></div>
+  <div class="results-container" id="resultsContainer"></div>
 
   <script src="topics.js"></script>
   <script>
@@ -90,11 +102,11 @@
       const letterInput = document.getElementById("letterInput");
       const changeLetterButton = document.getElementById("changeLetterButton");
       const categoryInput = document.getElementById("categoryInput");
-      const resultsDiv = document.getElementById("results");
+      const resultsContainer = document.getElementById("resultsContainer");
 
-      // Function to display results in compact layout
+      // Function to display results in multiple grids
       function displayResults(letter, categoryFilter = "") {
-        resultsDiv.innerHTML = ""; // Clear previous results
+        resultsContainer.innerHTML = ""; // Clear previous results
         const filteredData = {};
 
         // Filter by letter and category
@@ -107,44 +119,42 @@
         }
 
         const sortedCategories = Object.keys(filteredData).sort(); // Sort categories alphabetically
+        const resultsPerGrid = 10; // Number of rows per grid
+        let gridCount = 0;
 
         if (sortedCategories.length === 0) {
-          resultsDiv.innerHTML = "<p>No results found.</p>";
+          resultsContainer.innerHTML = "<p>No results found.</p>";
           return;
         }
 
-        let currentLetter = null;
-        let altColor = false;
+        // Create grids and populate them
+        while (gridCount * resultsPerGrid < sortedCategories.length) {
+          const gridDiv = document.createElement("div");
+          gridDiv.className = "results";
 
-        sortedCategories.forEach((category) => {
-          const firstLetter = /^[0-9]/.test(category) ? "0" : category[0].toUpperCase();
+          sortedCategories.slice(
+            gridCount * resultsPerGrid,
+            (gridCount + 1) * resultsPerGrid
+          ).forEach(category => {
+            const letterDiv = document.createElement("div");
+            letterDiv.className = "letter";
+            letterDiv.textContent = category[0].toUpperCase();
+            gridDiv.appendChild(letterDiv);
 
-          // Add the letter cell only for the first occurrence of a new letter
-          if (firstLetter !== currentLetter) {
-            currentLetter = firstLetter;
-            altColor = !altColor; // Toggle background color
+            const categoryCell = document.createElement("div");
+            categoryCell.className = "category";
+            categoryCell.textContent = category;
+            gridDiv.appendChild(categoryCell);
 
-            const letterCell = document.createElement("div");
-            letterCell.className = `letter ${altColor ? "alt" : ""}`;
-            letterCell.textContent = currentLetter;
-            resultsDiv.appendChild(letterCell);
-          } else {
-            // Add an empty cell for subsequent rows in the same group
-            const emptyCell = document.createElement("div");
-            resultsDiv.appendChild(emptyCell);
-          }
+            const answerCell = document.createElement("div");
+            answerCell.className = "answer";
+            answerCell.textContent = filteredData[category][0] || "N/A";
+            gridDiv.appendChild(answerCell);
+          });
 
-          // Add the category and answer cells
-          const categoryCell = document.createElement("div");
-          categoryCell.className = "category";
-          categoryCell.textContent = category;
-          resultsDiv.appendChild(categoryCell);
-
-          const answerCell = document.createElement("div");
-          answerCell.className = "answer";
-          answerCell.textContent = filteredData[category][0] || "N/A";
-          resultsDiv.appendChild(answerCell);
-        });
+          resultsContainer.appendChild(gridDiv);
+          gridCount++;
+        }
       }
 
       // Show/hide controls
@@ -164,7 +174,7 @@
 
       changeLetterButton.addEventListener("click", () => {
         toggleControls(true);
-        resultsDiv.innerHTML = "";
+        resultsContainer.innerHTML = "";
         letterInput.value = "";
         categoryInput.value = "";
       });
