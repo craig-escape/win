@@ -89,125 +89,127 @@
 
   <script src="topics.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const letterInput = document.getElementById("letterInput");
-      const changeLetterButton = document.getElementById("changeLetterButton");
-      const categoryInput = document.getElementById("categoryInput");
-      const resultsContainer = document.getElementById("resultsContainer");
+  document.addEventListener("DOMContentLoaded", function () {
+  const letterInput = document.getElementById("letterInput");
+  const changeLetterButton = document.getElementById("changeLetterButton");
+  const categoryInput = document.getElementById("categoryInput");
+  const resultsContainer = document.getElementById("resultsContainer");
 
-      // Function to display results in up to 4 grids
-      function displayResults(letter, categoryFilter = "") {
-        resultsContainer.innerHTML = ""; // Clear previous results
-        const filteredData = {};
+  // Function to display results in up to 4 grids
+  function displayResults(letter, categoryFilter = "") {
+    resultsContainer.innerHTML = ""; // Clear previous results
+    const filteredData = {};
 
-        // Filter by letter and category
-        if (data[letter]) {
-          Object.keys(data[letter]).forEach(category => {
-            if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
-              filteredData[category] = data[letter][category];
-            }
-          });
-        }
-
-        const sortedCategories = Object.keys(filteredData).sort(); // Sort categories alphabetically
-        if (sortedCategories.length === 0) {
-          resultsContainer.innerHTML = "<p>No results found.</p>";
-          return;
-        }
-
-        // Calculate available rows and row height
-        const controlsHeight = document.querySelector(".controls").offsetHeight;
-        const viewportHeight = window.innerHeight;
-        const availableHeight = viewportHeight - controlsHeight - 20; // Padding adjustment
-        const rowHeight = Math.max(15, Math.min(30, availableHeight / 40)); // Row height between 15px and 30px
-        const rowsPerGrid = Math.floor(availableHeight / rowHeight / 4); // Divide space across 4 grids
-
-        // Create grids and populate them
-        let gridCount = 0;
-        let lastLetter = ""; // Track the last letter used
-
-        while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
-          const gridDiv = document.createElement("div");
-          gridDiv.className = "results";
-
-          sortedCategories.slice(
-            gridCount * rowsPerGrid,
-            (gridCount + 1) * rowsPerGrid
-          ).forEach(category => {
-            const currentLetter = category[0].toUpperCase();
-            const letterDiv = document.createElement("div");
-            letterDiv.className = "letter";
-
-            // Only show the letter if it's the first occurrence
-            if (currentLetter !== lastLetter) {
-              letterDiv.textContent = currentLetter;
-              letterDiv.style.backgroundColor = "#ddd";
-            } else {
-              letterDiv.textContent = " ";
-              letterDiv.style.backgroundColor = "transparent";
-            }
-
-            gridDiv.appendChild(letterDiv);
-            lastLetter = currentLetter;
-
-            const categoryCell = document.createElement("div");
-            categoryCell.className = "category";
-            categoryCell.textContent = category;
-            gridDiv.appendChild(categoryCell);
-
-            const answerCell = document.createElement("div");
-            answerCell.className = "answer";
-            answerCell.textContent = filteredData[category][0] || "N/A";
-            gridDiv.appendChild(answerCell);
-          });
-
-          resultsContainer.appendChild(gridDiv);
-          gridCount++;
-        }
-
-        // Dynamically set row heights
-        document.querySelectorAll(".letter, .category, .answer").forEach(el => {
-          el.style.height = `${rowHeight}px`;
-        });
-      }
-
-      // Show/hide controls
-      function toggleControls(showInput) {
-        letterInput.style.display = showInput ? "inline-block" : "none";
-        changeLetterButton.style.display = showInput ? "none" : "inline-block";
-        categoryInput.style.display = showInput ? "none" : "inline-block";
-      }
-
-      // Event listeners
-      letterInput.addEventListener("input", () => {
-        if (letterInput.value) {
-          toggleControls(false);
-          displayResults(letterInput.value.toUpperCase());
+    // Filter by letter and category
+    if (data[letter]) {
+      Object.keys(data[letter]).forEach(category => {
+        if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          filteredData[category] = data[letter][category];
         }
       });
+    }
 
-      changeLetterButton.addEventListener("click", () => {
-        toggleControls(true);
-        resultsContainer.innerHTML = "";
-        letterInput.value = "";
-        categoryInput.value = "";
+    const sortedCategories = Object.keys(filteredData).sort(); // Sort categories alphabetically
+    if (sortedCategories.length === 0) {
+      resultsContainer.innerHTML = "<p>No results found.</p>";
+      return;
+    }
+
+    // Calculate available rows and row height
+    const controlsHeight = document.querySelector(".controls").offsetHeight;
+    const viewportHeight = window.innerHeight;
+    const availableHeight = viewportHeight - controlsHeight - 20; // Padding adjustment
+    const rowHeight = Math.max(15, Math.min(30, availableHeight / 40)); // Row height between 15px and 30px
+    const totalRows = Math.floor(availableHeight / rowHeight); // Total rows across all grids
+    const rowsPerGrid = Math.ceil(totalRows / 4); // Divide rows evenly among 4 grids
+
+    // Create grids and populate them
+    let gridCount = 0;
+    let lastLetter = ""; // Track the last letter used
+
+    while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
+      const gridDiv = document.createElement("div");
+      gridDiv.className = "results";
+
+      sortedCategories.slice(
+        gridCount * rowsPerGrid,
+        (gridCount + 1) * rowsPerGrid
+      ).forEach(category => {
+        const currentLetter = category[0].toUpperCase();
+        const letterDiv = document.createElement("div");
+        letterDiv.className = "letter";
+
+        // Only show the letter if it's the first occurrence
+        if (currentLetter !== lastLetter) {
+          letterDiv.textContent = currentLetter;
+          letterDiv.style.backgroundColor = "#ddd";
+        } else {
+          letterDiv.textContent = " ";
+          letterDiv.style.backgroundColor = "transparent";
+        }
+
+        gridDiv.appendChild(letterDiv);
+        lastLetter = currentLetter;
+
+        const categoryCell = document.createElement("div");
+        categoryCell.className = "category";
+        categoryCell.textContent = category;
+        gridDiv.appendChild(categoryCell);
+
+        const answerCell = document.createElement("div");
+        answerCell.className = "answer";
+        answerCell.textContent = filteredData[category][0] || "N/A";
+        gridDiv.appendChild(answerCell);
       });
 
-      categoryInput.addEventListener("input", () => {
-        const letter = letterInput.value.toUpperCase();
-        displayResults(letter, categoryInput.value);
-      });
+      resultsContainer.appendChild(gridDiv);
+      gridCount++;
+    }
 
-      // Adjust results container height dynamically
-      function adjustResultsHeight() {
-        const controlsHeight = document.querySelector(".controls").offsetHeight;
-        const viewportHeight = window.innerHeight;
-        resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
-      }
-
-      window.addEventListener("resize", adjustResultsHeight);
-      adjustResultsHeight();
+    // Dynamically set row heights
+    document.querySelectorAll(".letter, .category, .answer").forEach(el => {
+      el.style.height = `${rowHeight}px`;
     });
+  }
+
+  // Show/hide controls
+  function toggleControls(showInput) {
+    letterInput.style.display = showInput ? "inline-block" : "none";
+    changeLetterButton.style.display = showInput ? "none" : "inline-block";
+    categoryInput.style.display = showInput ? "none" : "inline-block";
+  }
+
+  // Event listeners
+  letterInput.addEventListener("input", () => {
+    if (letterInput.value) {
+      toggleControls(false);
+      displayResults(letterInput.value.toUpperCase());
+    }
+  });
+
+  changeLetterButton.addEventListener("click", () => {
+    toggleControls(true);
+    resultsContainer.innerHTML = "";
+    letterInput.value = "";
+    categoryInput.value = "";
+  });
+
+  categoryInput.addEventListener("input", () => {
+    const letter = letterInput.value.toUpperCase();
+    displayResults(letter, categoryInput.value);
+  });
+
+  // Adjust results container height dynamically
+  function adjustResultsHeight() {
+    const controlsHeight = document.querySelector(".controls").offsetHeight;
+    const viewportHeight = window.innerHeight;
+    resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
+  }
+
+  window.addEventListener("resize", adjustResultsHeight);
+  adjustResultsHeight();
+});
+
   </script>
 </body>
 </html>
