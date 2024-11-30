@@ -81,7 +81,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -114,13 +114,13 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Calculate total available height dynamically
-    const controlsHeight = document.querySelector(".controls").getBoundingClientRect().height;
+    // Calculate height dynamically
+    const controlsHeight = document.querySelector(".controls").offsetHeight;
     const viewportHeight = window.innerHeight;
     const availableHeight = viewportHeight - controlsHeight; // Total height available for rows
     const rowHeight = 15; // Fixed row height
-    const totalRows = Math.floor(availableHeight / rowHeight); // Maximum rows that can fit
-    const rowsPerGrid = Math.ceil(totalRows / 4); // Divide rows across 4 grids evenly
+    const totalRows = Math.floor(availableHeight / rowHeight); // Total rows that fit in available space
+    const rowsPerGrid = Math.ceil(totalRows / 4); // Distribute rows evenly across 4 grids
 
     // Create grids and populate them
     let gridCount = 0;
@@ -200,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Adjust container height dynamically
   function adjustResultsHeight() {
-    const controlsHeight = document.querySelector(".controls").getBoundingClientRect().height;
+    const controlsHeight = document.querySelector(".controls").offsetHeight;
     const viewportHeight = window.innerHeight;
     resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
   }
