@@ -30,14 +30,15 @@
     .results-container {
       flex-grow: 1;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      overflow-y: auto;
       padding: 10px;
       gap: 10px;
-      overflow-y: auto;
+      box-sizing: border-box;
     }
     .column {
       display: grid;
-      grid-auto-rows: min-content;
+      grid-template-rows: auto;
       gap: 0;
     }
     .letter {
@@ -61,11 +62,6 @@
     .category {
       font-weight: bold;
     }
-    @media (max-width: 768px) {
-      .results-container {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      }
-    }
   </style>
 </head>
 <body>
@@ -84,35 +80,35 @@
 
       function groupAndSortData(data, letter) {
         const grouped = {};
-        const sortedKeys = Object.keys(data).sort();
-
-        sortedKeys.forEach(category => {
+        Object.keys(data).forEach(category => {
           const firstLetter = category[0].toUpperCase();
           const group = /^[0-9]/.test(firstLetter) ? "*" : firstLetter;
           if (!grouped[group]) grouped[group] = [];
-          if (group === letter || letter === "*") {
+          if (letter === "*" || group === letter) {
             grouped[group].push({ category, answer: data[category][0] || "N/A" });
           }
         });
-
+        Object.keys(grouped).forEach(group => {
+          grouped[group].sort((a, b) => a.category.localeCompare(b.category));
+        });
         return grouped;
       }
 
       function displayResults(letter, categoryFilter = "") {
         resultsContainer.innerHTML = ""; // Clear previous results
-        const filteredData = groupAndSortData(data, letter);
+        const groupedData = groupAndSortData(data, letter);
 
-        if (!filteredData[letter]) {
+        if (!groupedData[letter]) {
           resultsContainer.innerHTML = "<p>No results found.</p>";
           return;
         }
 
-        Object.keys(filteredData).forEach(group => {
+        Object.keys(groupedData).forEach(group => {
           const columnDiv = document.createElement("div");
           columnDiv.className = "column";
 
           let isFirstLetterDisplayed = false;
-          filteredData[group].forEach(item => {
+          groupedData[group].forEach(item => {
             if (!isFirstLetterDisplayed) {
               const letterDiv = document.createElement("div");
               letterDiv.className = `letter ${group === "*" ? "alt" : ""}`;
@@ -147,7 +143,15 @@
 
       categoryInput.addEventListener("input", () => {
         const letter = letterInput.value.toUpperCase();
-        const filter = categoryInput.value;
+        const filter = categoryInput.value.toLowerCase();
+        const filteredData = {};
+
+        Object.keys(data[letter] || {}).forEach(category => {
+          if (category.toLowerCase().includes(filter)) {
+            filteredData[category] = data[letter][category];
+          }
+        });
+
         displayResults(letter, filter);
       });
 
