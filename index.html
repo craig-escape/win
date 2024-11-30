@@ -114,12 +114,13 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Calculate height dynamically
-    const controlsHeight = document.querySelector(".controls").offsetHeight;
+    // Calculate total available height dynamically
+    const controlsHeight = document.querySelector(".controls").getBoundingClientRect().height;
     const viewportHeight = window.innerHeight;
     const availableHeight = viewportHeight - controlsHeight; // Total height available for rows
     const rowHeight = 15; // Fixed row height
-    const rowsPerGrid = Math.floor(availableHeight / rowHeight / 4); // Distribute across 4 grids
+    const totalRows = Math.floor(availableHeight / rowHeight); // Maximum rows that can fit
+    const rowsPerGrid = Math.ceil(totalRows / 4); // Divide rows across 4 grids evenly
 
     // Create grids and populate them
     let gridCount = 0;
@@ -164,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
       gridCount++;
     }
 
-    // Apply row height dynamically
+    // Apply fixed row height dynamically
     document.querySelectorAll(".letter, .category, .answer").forEach(el => {
       el.style.height = `${rowHeight}px`;
     });
@@ -199,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Adjust container height dynamically
   function adjustResultsHeight() {
-    const controlsHeight = document.querySelector(".controls").offsetHeight;
+    const controlsHeight = document.querySelector(".controls").getBoundingClientRect().height;
     const viewportHeight = window.innerHeight;
     resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
   }
