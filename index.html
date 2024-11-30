@@ -98,11 +98,11 @@ document.addEventListener("DOMContentLoaded", function () {
   function alphabetizeData(data) {
     const sortedData = {};
     Object.keys(data)
-      .sort()
+      .sort() // Sort letters alphabetically
       .forEach(letter => {
         sortedData[letter] = {};
         Object.keys(data[letter])
-          .sort()
+          .sort() // Sort categories alphabetically
           .forEach(category => {
             sortedData[letter][category] = data[letter][category];
           });
@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    const sortedCategories = Object.keys(filteredData).sort(); // Sort categories alphabetically
+    const sortedCategories = Object.keys(filteredData).sort(); // Ensure categories are sorted alphabetically
     if (sortedCategories.length === 0) {
       resultsContainer.innerHTML = "<p>No results found.</p>";
       return;
