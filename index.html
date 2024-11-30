@@ -94,6 +94,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const categoryInput = document.getElementById("categoryInput");
   const resultsContainer = document.getElementById("resultsContainer");
 
+  let typingTimer; // Timer for detecting typing pauses
+  let singleLetterTyped = false; // Flag to track if a single letter was typed
+
   // Helper function to sort and render the data correctly
   function alphabetizeAndDisplay(data) {
     const sortedData = {};
@@ -131,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    const sortedCategories = Object.keys(filteredData); // No need to sort again, already sorted
+    const sortedCategories = Object.keys(filteredData); // Already sorted
     if (sortedCategories.length === 0) {
       resultsContainer.innerHTML = "<p>No results found.</p>";
       return;
@@ -226,6 +229,20 @@ document.addEventListener("DOMContentLoaded", function () {
       categoryInput.value = "";
       displayResults(letter, "");
       return;
+    }
+
+    // Handle typing pause for single letters
+    if (value.length === 1 && !singleLetterTyped) {
+      singleLetterTyped = true;
+
+      // Start a timer to detect typing pauses
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        singleLetterTyped = false; // Reset flag after 0.5 seconds
+      }, 500);
+    } else if (value.length === 1 && singleLetterTyped) {
+      categoryInput.value = ""; // Clear the input box
+      singleLetterTyped = false; // Reset flag
     }
 
     // Perform search
