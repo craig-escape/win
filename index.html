@@ -38,7 +38,7 @@
     }
     .results-container {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       overflow-x: auto;
       padding: 10px;
     }
@@ -59,7 +59,6 @@
       padding: 5px;
       border: 1px solid #ccc;
       font-size: 14px;
-      height: 30px; /* Fixed row height */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -87,10 +86,9 @@
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
   <div class="results-container" id="resultsContainer"></div>
+
   <script src="topics.js"></script>
-
   <script>
-
     document.addEventListener("DOMContentLoaded", function () {
       const letterInput = document.getElementById("letterInput");
       const changeLetterButton = document.getElementById("changeLetterButton");
@@ -117,12 +115,15 @@
           return;
         }
 
-        // Calculate available rows based on viewport height
+        // Calculate available rows and row height
         const controlsHeight = document.querySelector(".controls").offsetHeight;
         const viewportHeight = window.innerHeight;
         const availableHeight = viewportHeight - controlsHeight - 20; // Padding adjustment
-        const rowHeight = 30; // Fixed height for each row
-        const maxGrids = 4; // Max number of grids
+        const maxGrids = 4; // Maximum number of grids
+        const rowHeight = Math.min(
+          Math.max(availableHeight / 40, 15), // Minimum height: 15px
+          30 // Maximum height: 30px
+        );
         const rowsPerGrid = Math.floor(availableHeight / rowHeight / maxGrids);
 
         // Create grids and populate them
@@ -167,6 +168,11 @@
           resultsContainer.appendChild(gridDiv);
           gridCount++;
         }
+
+        // Adjust row heights dynamically
+        document.querySelectorAll(".letter, .category, .answer").forEach(el => {
+          el.style.height = `${rowHeight}px`;
+        });
       }
 
       // Show/hide controls
