@@ -89,13 +89,12 @@
 
   <script src="topics.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   const letterInput = document.getElementById("letterInput");
   const changeLetterButton = document.getElementById("changeLetterButton");
   const categoryInput = document.getElementById("categoryInput");
   const resultsContainer = document.getElementById("resultsContainer");
 
-  // Function to display results in up to 4 grids
   function displayResults(letter, categoryFilter = "") {
     resultsContainer.innerHTML = ""; // Clear previous results
     const filteredData = {};
@@ -115,13 +114,12 @@
       return;
     }
 
-    // Calculate available rows and row height
+    // Calculate height dynamically
     const controlsHeight = document.querySelector(".controls").offsetHeight;
     const viewportHeight = window.innerHeight;
-    const availableHeight = viewportHeight - controlsHeight - 20; // Padding adjustment
-    const rowHeight = Math.max(15, Math.min(30, availableHeight / 40)); // Row height between 15px and 30px
-    const totalRows = Math.floor(availableHeight / rowHeight); // Total rows across all grids
-    const rowsPerGrid = Math.ceil(totalRows / 4); // Divide rows evenly among 4 grids
+    const availableHeight = viewportHeight - controlsHeight; // Total height available for rows
+    const rowHeight = 15; // Fixed row height
+    const rowsPerGrid = Math.floor(availableHeight / rowHeight / 4); // Distribute across 4 grids
 
     // Create grids and populate them
     let gridCount = 0;
@@ -139,7 +137,7 @@
         const letterDiv = document.createElement("div");
         letterDiv.className = "letter";
 
-        // Only show the letter if it's the first occurrence
+        // Show the letter only for the first category of the group
         if (currentLetter !== lastLetter) {
           letterDiv.textContent = currentLetter;
           letterDiv.style.backgroundColor = "#ddd";
@@ -166,7 +164,7 @@
       gridCount++;
     }
 
-    // Dynamically set row heights
+    // Apply row height dynamically
     document.querySelectorAll(".letter, .category, .answer").forEach(el => {
       el.style.height = `${rowHeight}px`;
     });
@@ -199,7 +197,7 @@
     displayResults(letter, categoryInput.value);
   });
 
-  // Adjust results container height dynamically
+  // Adjust container height dynamically
   function adjustResultsHeight() {
     const controlsHeight = document.querySelector(".controls").offsetHeight;
     const viewportHeight = window.innerHeight;
@@ -209,6 +207,7 @@
   window.addEventListener("resize", adjustResultsHeight);
   adjustResultsHeight();
 });
+
 
   </script>
 </body>
