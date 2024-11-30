@@ -125,7 +125,7 @@
             altColor = !altColor; // Toggle background color
 
             const letterCell = document.createElement("div");
-            letterCell.className = letter ${altColor ? "alt" : ""};
+            letterCell.className = `letter ${altColor ? "alt" : ""}`;
             letterCell.textContent = currentLetter;
             resultsDiv.appendChild(letterCell);
           } else {
