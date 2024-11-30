@@ -116,8 +116,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const viewportHeight = window.innerHeight;
     const availableHeight = viewportHeight - controlsHeight; // Total height available for rows
     const rowHeight = 15; // Fixed row height
-    const totalRows = Math.floor(2 * availableHeight / rowHeight); // Total rows that fit in available space
-    const rowsPerGrid = Math.ceil(totalRows / 4); // Distribute rows evenly across 4 grids
+    const totalRows = Math.floor(2 * availableHeight / rowHeight); // Adjusted total rows calculation
+    const rowsPerGrid = Math.ceil(totalRows / 4); // Divide rows evenly across 4 grids
 
     // Create grids and populate them
     let gridCount = 0;
@@ -126,6 +126,7 @@ document.addEventListener("DOMContentLoaded", function () {
     while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
       const gridDiv = document.createElement("div");
       gridDiv.className = "results";
+      gridDiv.style.justifyContent = "flex-start"; // Ensure items are top-aligned within each grid
 
       sortedCategories.slice(
         gridCount * rowsPerGrid,
