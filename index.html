@@ -36,17 +36,19 @@
     .controls button:hover {
       background-color: #0056b3;
     }
-    .results-container {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding: 10px;
-    }
+.results-container {
+  display: flex;
+  align-items: flex-start; /* Align the grids to the top */
+  overflow-x: auto;
+}
+
 .results {
   display: grid;
-  grid-template-columns: auto 1fr 1fr;
-  gap: 0; /* No gap between rows */
-  align-items: start; /* Align rows to the top */
+  grid-template-columns: auto 1fr 1fr; /* Adjust as per column requirements */
+  align-items: start; /* Align items in the grid to the top */
+  justify-content: flex-start; /* Ensure content starts from the top-left */
+  gap: 0; /* Remove gaps between rows */
+  padding: 0;
   border-right: 1px solid #ddd;
   padding-right: 10px;
 }
