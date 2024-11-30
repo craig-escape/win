@@ -9,18 +9,15 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 10px;
-      display: flex;
-      flex-direction: column;
       background-color: #f9f9f9;
     }
     .controls {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
+      gap: 10px;
       padding: 10px;
       background-color: #f8f9fa;
       border-bottom: 1px solid #ddd;
-      gap: 10px;
     }
     .controls input, .controls button {
       padding: 8px 12px;
@@ -38,13 +35,13 @@
     }
     .results {
       display: grid;
-      grid-template-columns: repeat(3, 1fr); /* Split into 3 sections */
+      grid-template-columns: repeat(3, 1fr); /* 3 sections by default */
       gap: 10px;
       margin-top: 10px;
     }
     @media (max-width: 1024px) {
       .results {
-        grid-template-columns: repeat(2, 1fr); /* Adjust to 2 sections on smaller screens */
+        grid-template-columns: repeat(2, 1fr); /* 2 sections on smaller screens */
       }
     }
     @media (max-width: 768px) {
@@ -90,34 +87,53 @@
 </head>
 <body>
   <div class="controls">
-    <button id="changeLetterButton" style="display: none;">Change Letter</button>
+    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
+    <button id="changeLetterButton">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category">
   </div>
   <div id="results" class="results"></div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const data = { /* Add your data here */ };
+      const data = {
+        // Sample data (replace with your actual data)
+        A: { "Actor": ["Anthony Hopkins"], "Actress": ["Angelina Jolie"], "Animal": ["Alligator"] },
+        B: { "Band": ["Blur"], "Bird": ["Blue Jay"], "Book": ["Brave New World"] },
+        C: { "Car": ["Chevrolet"], "Country": ["Canada"], "City": ["Copenhagen"] }
+      };
+
+      const letterInput = document.getElementById("letterInput");
+      const changeLetterButton = document.getElementById("changeLetterButton");
+      const categoryInput = document.getElementById("categoryInput");
       const resultsDiv = document.getElementById("results");
 
       // Function to display results
-      function displayResults() {
+      function displayResults(letter, categoryFilter = "") {
         resultsDiv.innerHTML = ""; // Clear previous results
-        let currentLetter = null;
+
+        const filteredData = data[letter] || {};
+        const sortedCategories = Object.keys(filteredData)
+          .filter(category => category.toLowerCase().includes(categoryFilter.toLowerCase()))
+          .sort();
+
+        if (sortedCategories.length === 0) {
+          resultsDiv.innerHTML = "<p>No results found.</p>";
+          return;
+        }
+
+        let currentLetter = letter;
         let altColor = false;
 
         const columns = [document.createElement("div"), document.createElement("div"), document.createElement("div")];
         columns.forEach(col => col.className = "column");
 
-        Object.keys(data).sort().forEach((key, idx) => {
-          const firstLetter = /^[0-9]/.test(key) ? "0" : key[0].toUpperCase();
-
+        sortedCategories.forEach((category, idx) => {
           const row = document.createElement("div");
           row.className = `row ${altColor ? "alt" : ""}`;
           altColor = !altColor;
 
-          if (firstLetter !== currentLetter) {
-            currentLetter = firstLetter;
+          // Add letter only at the top of each group
+          if (idx === 0) {
             const letterDiv = document.createElement("div");
             letterDiv.className = `letter ${altColor ? "alt" : ""}`;
             letterDiv.textContent = currentLetter;
@@ -130,12 +146,12 @@
 
           const categoryDiv = document.createElement("div");
           categoryDiv.className = "category";
-          categoryDiv.textContent = key;
+          categoryDiv.textContent = category;
           row.appendChild(categoryDiv);
 
           const answerDiv = document.createElement("div");
           answerDiv.className = "answer";
-          answerDiv.textContent = data[key][0] || "N/A";
+          answerDiv.textContent = filteredData[category][0] || "N/A";
           row.appendChild(answerDiv);
 
           columns[idx % 3].appendChild(row);
@@ -144,8 +160,29 @@
         columns.forEach(col => resultsDiv.appendChild(col));
       }
 
-      // Initial rendering
-      displayResults();
+      // Show results when letter is entered
+      letterInput.addEventListener("input", () => {
+        const letter = letterInput.value.toUpperCase();
+        if (letter && /^[A-Z0-9]$/.test(letter)) {
+          displayResults(letter);
+        }
+      });
+
+      // Filter categories
+      categoryInput.addEventListener("input", () => {
+        const letter = letterInput.value.toUpperCase();
+        if (letter) {
+          displayResults(letter, categoryInput.value);
+        }
+      });
+
+      // Reset letter selection
+      changeLetterButton.addEventListener("click", () => {
+        letterInput.value = "";
+        categoryInput.value = "";
+        resultsDiv.innerHTML = "";
+        letterInput.focus();
+      });
     });
   </script>
 </body>
