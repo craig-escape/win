@@ -71,14 +71,10 @@
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
   <div class="results-container" id="resultsContainer"></div>
+  <script src="topics.js"></script>
 
   <script>
     const data = {
-      A: { Actor: "Anthony Hopkins", Animal: "Alligator", Actress: "Angelina Jolie" },
-      B: { Band: "Blur", Bird: "Blue Jay", BodyPart: "Belly" },
-      C: { Car: "BMW", Country: "Brazil", City: "Copenhagen" },
-      // Add all other data here...
-    };
 
     document.addEventListener("DOMContentLoaded", function () {
       const letterInput = document.getElementById("letterInput");
