@@ -40,41 +40,42 @@
       flex: 1;
       overflow-y: auto;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive columns */
+      gap: 0;
       padding: 20px;
-      align-content: start;
     }
-    .column {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+    .row {
+      display: grid;
+      grid-template-columns: 40px 1fr 1fr;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
     }
-    .letter-group {
-      background-color: #e4e4e4;
-      padding: 10px;
-      font-weight: bold;
-      text-align: center;
-      color: #333;
-      border: 1px solid #ccc;
-    }
-    .item {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    .item:nth-child(odd) {
+    .row:nth-child(even) {
       background-color: #f9f9f9;
     }
-    .category {
-      font-weight: bold;
-      margin-right: 10px;
+    .row:nth-child(odd) {
+      background-color: #fff;
     }
-    .answer {
-      text-align: right;
+    .row.letter-header {
+      background-color: #ddd;
+      font-weight: bold;
+      color: #333;
+    }
+    .cell {
+      padding: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cell.first {
+      text-align: center;
+      font-weight: bold;
+    }
+    .cell.category {
+      font-weight: bold;
+    }
+    .cell.answer {
+      text-align: left;
       color: #555;
     }
     @media (max-width: 768px) {
@@ -100,7 +101,7 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsDiv = document.getElementById("results");
 
-      // Function to display results alphabetized in columns with letter groups
+      // Function to display results in compact layout with grouped letters
       function displayResults(letter, categoryFilter = "") {
         resultsDiv.innerHTML = ""; // Clear previous results
         const filteredData = {};
@@ -122,47 +123,37 @@
         }
 
         let currentLetter = null;
-        let columnDiv = document.createElement("div");
-        columnDiv.className = "column";
 
-        // Group results by the first letter
-        sortedCategories.forEach((category, index) => {
-          const firstLetter = category[0].toUpperCase();
+        // Group numbers under "0"
+        const groupNumberAsZero = (key) => /^[0-9]/.test(key) ? "0" : key[0].toUpperCase();
 
-          // Add a new "letter group" header if the first letter changes
+        sortedCategories.forEach((category) => {
+          const firstLetter = groupNumberAsZero(category);
+
+          // Add a new "letter header" row if the first letter changes
           if (firstLetter !== currentLetter) {
             currentLetter = firstLetter;
 
-            if (index > 0) {
-              resultsDiv.appendChild(columnDiv); // Add the completed column
-              columnDiv = document.createElement("div");
-              columnDiv.className = "column";
-            }
-
-            const letterGroupDiv = document.createElement("div");
-            letterGroupDiv.className = "letter-group";
-            letterGroupDiv.textContent = currentLetter;
-            columnDiv.appendChild(letterGroupDiv);
+            const letterHeader = document.createElement("div");
+            letterHeader.className = "row letter-header";
+            letterHeader.innerHTML = `
+              <div class="cell first">${currentLetter}</div>
+              <div class="cell"></div>
+              <div class="cell"></div>
+            `;
+            resultsDiv.appendChild(letterHeader);
           }
 
-          // Create category-answer pair
-          const itemDiv = document.createElement("div");
-          itemDiv.className = "item";
-
-          const categoryDiv = document.createElement("div");
-          categoryDiv.className = "category";
-          categoryDiv.textContent = category;
-
-          const answerDiv = document.createElement("div");
-          answerDiv.className = "answer";
-          answerDiv.textContent = filteredData[category][0] || "N/A";
-
-          itemDiv.appendChild(categoryDiv);
-          itemDiv.appendChild(answerDiv);
-          columnDiv.appendChild(itemDiv);
+          // Create category-answer pair row
+          const rowDiv = document.createElement("div");
+          rowDiv.className = "row";
+          rowDiv.innerHTML = `
+            <div class="cell first"></div>
+            <div class="cell category">${category}</div>
+            <div class="cell answer">${filteredData[category][0] || "N/A"}</div>
+          `;
+          resultsDiv.appendChild(rowDiv);
         });
-
-        resultsDiv.appendChild(columnDiv); // Add the last column
       }
 
       // Show/hide controls
