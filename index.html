@@ -24,6 +24,26 @@
     .results {
       margin-top: 20px;
     }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+      font-weight: bold;
+    }
+    @media (max-width: 768px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
     .result-item {
       margin: 10px 0;
       font-size: 18px;
@@ -45,78 +65,91 @@
 
     <div id="results" class="results"></div>
   </div>
+
   <script src="topics.js"></script>
-
   <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const letterInput = document.getElementById("letterInput");
+      const categoryInput = document.getElementById("categoryInput");
+      const resultsDiv = document.getElementById("results");
 
+      // Function to create and populate the table
+      function createTable(data) {
+        const table = document.createElement("table");
+        table.style.width = "100%";
+        table.style.borderCollapse = "collapse";
+        table.style.marginTop = "20px";
 
-// DOM elements
-const letterInput = document.getElementById("letterInput");
-const categoryInput = document.getElementById("categoryInput");
-const resultsDiv = document.getElementById("results");
+        const headerRow = document.createElement("tr");
 
-let currentData = {}; // Store the data for the selected letter
+        // Create table headers
+        const headers = ["Category", "Answer 1", "Answer 2", "Answer 3", "Answer 4", "Answer 5"];
+        headers.forEach(headerText => {
+          const th = document.createElement("th");
+          th.textContent = headerText;
+          th.style.border = "1px solid #ddd";
+          th.style.padding = "10px";
+          th.style.backgroundColor = "#f4f4f4";
+          headerRow.appendChild(th);
+        });
 
-// Function to display results
-function displayResults(data) {
-  resultsDiv.innerHTML = ""; // Clear previous results
+        table.appendChild(headerRow);
 
-  if (!data || Object.keys(data).length === 0) {
-    resultsDiv.innerHTML = "<p>No matching categories found.</p>";
-    return;
-  }
+        // Populate the table rows
+        Object.keys(data).forEach(category => {
+          const answers = data[category] || [];
+          const row = document.createElement("tr");
 
-  // Sort categories alphabetically
-  const sortedCategories = Object.keys(data).sort();
+          // Category column
+          const categoryCell = document.createElement("td");
+          categoryCell.textContent = category;
+          categoryCell.style.border = "1px solid #ddd";
+          categoryCell.style.padding = "10px";
+          row.appendChild(categoryCell);
 
-  sortedCategories.forEach((category) => {
-    const answers = data[category].join(", ");
-    const resultItem = document.createElement("div");
-    resultItem.className = "result-item";
-    resultItem.innerHTML = `<span class="highlight">${category}:</span> ${answers}`;
-    resultsDiv.appendChild(resultItem);
-  });
-}
+          // Answer columns
+          for (let i = 0; i < 5; i++) {
+            const answerCell = document.createElement("td");
+            answerCell.textContent = answers[i] || ""; // Empty if less than 5 answers
+            answerCell.style.border = "1px solid #ddd";
+            answerCell.style.padding = "10px";
+            row.appendChild(answerCell);
+          }
 
-// Handle letter input
-letterInput.addEventListener("keyup", () => {
-  const letter = letterInput.value.toUpperCase();
-  if (data[letter]) {
-    currentData = data[letter];
-    displayResults(currentData); // Show all categories for the selected letter
-    categoryInput.focus(); // Focus on the category input box
-  } else {
-    resultsDiv.innerHTML = "<p>No data available for this letter.</p>";
-    currentData = {};
-  }
-});
+          table.appendChild(row);
+        });
 
-// Handle category search
-categoryInput.addEventListener("input", () => {
-  const searchQuery = categoryInput.value.toLowerCase();
+        return table;
+      }
 
-  if (searchQuery.trim() === "") {
-    displayResults(currentData); // Reset to full list
-    return;
-  }
+      // Event listener to filter and display results
+      function displayResults() {
+        const letter = letterInput.value.toUpperCase();
+        const categoryFilter = categoryInput.value.toLowerCase();
 
-  // Filter results based on search query
-  const filteredResults = Object.keys(currentData)
-    .filter((category) => category.toLowerCase().includes(searchQuery))
-    .reduce((obj, key) => {
-      obj[key] = currentData[key];
-      return obj;
-    }, {});
+        if (!data[letter]) {
+          resultsDiv.innerHTML = "<p>No results found for the selected letter.</p>";
+          return;
+        }
 
-  displayResults(filteredResults);
-});
+        const filteredData = {};
+        Object.keys(data[letter]).forEach(category => {
+          if (category.toLowerCase().includes(categoryFilter)) {
+            filteredData[category] = data[letter][category];
+          }
+        });
 
-// Handle Space and Enter for clearing
-categoryInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault(); // Prevent default behavior
-    categoryInput.value = ""; // Clear the input box
-    displayResults(currentData); // Reset to full list
-  }
-});
-</script>
+        if (Object.keys(filteredData).length === 0) {
+          resultsDiv.innerHTML = "<p>No matching categories found.</p>";
+        } else {
+          resultsDiv.innerHTML = ""; // Clear previous results
+          resultsDiv.appendChild(createTable(filteredData));
+        }
+      }
+
+      letterInput.addEventListener("input", displayResults);
+      categoryInput.addEventListener("input", displayResults);
+    });
+  </script>
+</body>
+</html>
