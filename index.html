@@ -28,40 +28,43 @@
       border-radius: 4px;
     }
     .results-container {
-      flex: 1;
+      flex-grow: 1;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      overflow: hidden;
       padding: 10px;
-      overflow: auto;
+      gap: 10px;
+      box-sizing: border-box;
     }
     .results {
       display: grid;
-      grid-template-rows: auto auto;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: auto 1fr 1fr;
       gap: 0;
-      border: 1px solid #ddd;
-      border-radius: 5px;
+      align-items: center;
+      border-right: 1px solid #ddd;
     }
-    .letter-header {
-      grid-column: 1 / -1;
-      background-color: #f0f0f0;
+    .letter {
+      background-color: #ddd;
+      font-weight: bold;
       text-align: center;
-      font-weight: bold;
       padding: 5px;
+      color: #333;
+      border: 1px solid #ccc;
     }
-    .category {
-      font-weight: bold;
-      text-align: left;
-      padding: 5px;
-      background-color: #fff;
-      border-bottom: 1px solid #ddd;
+    .letter.alt {
+      background-color: #e4e4e4;
     }
-    .answer {
-      text-align: left;
+    .category, .answer {
       padding: 5px;
-      background-color: #f9f9f9;
-      border-bottom: 1px solid #ddd;
+      border: 1px solid #ddd;
+      font-size: 12px;
+      text-align: left;
+      height: 100%;
+    }
+    @media (max-width: 768px) {
+      .results {
+        grid-template-columns: auto 1fr;
+      }
     }
   </style>
 </head>
@@ -79,52 +82,54 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsContainer = document.getElementById("resultsContainer");
 
-      function clearCategoryFieldOnSpecialKeys(event) {
-        if ([" ", "Enter", "Backspace"].includes(event.key)) {
-          event.preventDefault();
-          categoryInput.value = "";
-          displayResults(letterInput.value.toUpperCase());
-        }
-      }
-
       function displayResults(letter, categoryFilter = "") {
-        resultsContainer.innerHTML = "";
+        resultsContainer.innerHTML = ""; // Clear previous results
+        const filteredData = {};
 
-        if (!data[letter]) {
+        // Filter and sort categories
+        if (data[letter]) {
+          Object.keys(data[letter])
+            .filter(category => category.toLowerCase().includes(categoryFilter.toLowerCase()))
+            .sort()
+            .forEach(category => {
+              filteredData[category] = data[letter][category];
+            });
+        }
+
+        const sortedCategories = Object.keys(filteredData);
+        if (sortedCategories.length === 0) {
           resultsContainer.innerHTML = "<p>No results found.</p>";
           return;
         }
 
-        const categories = Object.keys(data[letter])
-          .filter(category => category.toLowerCase().includes(categoryFilter.toLowerCase()))
-          .sort();
+        let currentLetter = "";
+        sortedCategories.forEach(category => {
+          const gridDiv = document.createElement("div");
+          gridDiv.className = "results";
 
-        if (categories.length === 0) {
-          resultsContainer.innerHTML = "<p>No results found.</p>";
-          return;
-        }
+          const firstLetter = category[0].toUpperCase();
+          if (currentLetter !== firstLetter) {
+            currentLetter = firstLetter;
+            const letterDiv = document.createElement("div");
+            letterDiv.className = `letter ${currentLetter === "*" ? "alt" : ""}`;
+            letterDiv.textContent = currentLetter;
+            gridDiv.appendChild(letterDiv);
+          } else {
+            gridDiv.appendChild(document.createElement("div"));
+          }
 
-        const resultsDiv = document.createElement("div");
-        resultsDiv.className = "results";
-
-        const letterHeader = document.createElement("div");
-        letterHeader.className = "letter-header";
-        letterHeader.textContent = letter;
-        resultsDiv.appendChild(letterHeader);
-
-        categories.forEach(category => {
           const categoryCell = document.createElement("div");
           categoryCell.className = "category";
           categoryCell.textContent = category;
-          resultsDiv.appendChild(categoryCell);
+          gridDiv.appendChild(categoryCell);
 
           const answerCell = document.createElement("div");
           answerCell.className = "answer";
-          answerCell.textContent = data[letter][category][0] || "N/A";
-          resultsDiv.appendChild(answerCell);
-        });
+          answerCell.textContent = filteredData[category][0] || "N/A";
+          gridDiv.appendChild(answerCell);
 
-        resultsContainer.appendChild(resultsDiv);
+          resultsContainer.appendChild(gridDiv);
+        });
       }
 
       letterInput.addEventListener("input", () => {
@@ -141,7 +146,13 @@
         displayResults(letter, categoryInput.value);
       });
 
-      categoryInput.addEventListener("keydown", clearCategoryFieldOnSpecialKeys);
+      categoryInput.addEventListener("keydown", event => {
+        if ([" ", "Enter", "Backspace"].includes(event.key)) {
+          event.preventDefault();
+          categoryInput.value = "";
+          displayResults(letterInput.value.toUpperCase());
+        }
+      });
     });
   </script>
 </body>
