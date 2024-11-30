@@ -8,17 +8,19 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      background-color: #f9f9f9;
     }
     .controls {
       display: flex;
-      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
       padding: 10px;
       background-color: #f8f9fa;
       border-bottom: 1px solid #ddd;
+      gap: 10px;
     }
     .controls input, .controls button {
       padding: 8px 12px;
@@ -28,152 +30,122 @@
     }
     .controls button {
       background-color: #007BFF;
-      color: #fff;
+      color: white;
       cursor: pointer;
     }
     .controls button:hover {
       background-color: #0056b3;
     }
     .results {
-      flex: 1;
-      overflow-y: auto;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 3 or 4 columns based on screen size */
-      gap: 0;
-      padding: 10px;
+      grid-template-columns: repeat(3, 1fr); /* Split into 3 sections */
+      gap: 10px;
+      margin-top: 10px;
+    }
+    @media (max-width: 1024px) {
+      .results {
+        grid-template-columns: repeat(2, 1fr); /* Adjust to 2 sections on smaller screens */
+      }
+    }
+    @media (max-width: 768px) {
+      .results {
+        grid-template-columns: 1fr; /* Single section on narrow screens */
+      }
     }
     .column {
       display: flex;
       flex-direction: column;
     }
-    .letter-group {
-      background-color: #ddd;
-      font-weight: bold;
-      text-align: left;
-      padding: 5px;
-      border: 1px solid #ccc;
-      grid-column: span 2;
-    }
-    .letter-group.alt {
-      background-color: #e4e4e4;
-    }
     .row {
       display: grid;
-      grid-template-columns: auto 1fr; /* First column for letter, second for categories */
+      grid-template-columns: 30px 1fr 1fr;
       align-items: center;
-      border-bottom: 1px solid #ccc;
+      border: 1px solid #ddd;
+      background-color: white;
+      font-size: 14px;
+    }
+    .row.alt {
+      background-color: #f1f1f1;
+    }
+    .letter {
+      background-color: #ccc;
+      font-weight: bold;
+      text-align: center;
+      padding: 5px;
+      border-right: 1px solid #ddd;
+    }
+    .letter.alt {
+      background-color: #b0c4de;
+    }
+    .category, .answer {
+      padding: 5px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     .category {
       font-weight: bold;
-      padding: 5px;
-      border-right: 1px solid #ddd;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-    .answer {
-      padding: 5px;
-      color: #555;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-    @media (max-width: 768px) {
-      .results {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjust for smaller screens */
-      }
     }
   </style>
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
-    <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
+    <input type="text" id="categoryInput" placeholder="Search category">
   </div>
   <div id="results" class="results"></div>
 
-  <script src="topics.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const letterInput = document.getElementById("letterInput");
-      const changeLetterButton = document.getElementById("changeLetterButton");
-      const categoryInput = document.getElementById("categoryInput");
+      const data = { /* Add your data here */ };
       const resultsDiv = document.getElementById("results");
 
-      function displayResults(letter, categoryFilter = "") {
+      // Function to display results
+      function displayResults() {
         resultsDiv.innerHTML = ""; // Clear previous results
-        const filteredData = {};
-
-        if (data[letter]) {
-          Object.keys(data[letter]).forEach((category) => {
-            if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
-              filteredData[category] = data[letter][category];
-            }
-          });
-        }
-
-        const sortedCategories = Object.keys(filteredData).sort(); // Alphabetical order
-        if (sortedCategories.length === 0) {
-          resultsDiv.innerHTML = "<p>No results found.</p>";
-          return;
-        }
-
         let currentLetter = null;
         let altColor = false;
 
-        sortedCategories.forEach((category) => {
-          const firstLetter = /^[0-9]/.test(category) ? "0" : category[0].toUpperCase();
+        const columns = [document.createElement("div"), document.createElement("div"), document.createElement("div")];
+        columns.forEach(col => col.className = "column");
+
+        Object.keys(data).sort().forEach((key, idx) => {
+          const firstLetter = /^[0-9]/.test(key) ? "0" : key[0].toUpperCase();
+
+          const row = document.createElement("div");
+          row.className = `row ${altColor ? "alt" : ""}`;
+          altColor = !altColor;
 
           if (firstLetter !== currentLetter) {
             currentLetter = firstLetter;
-            altColor = !altColor;
-
-            const letterGroup = document.createElement("div");
-            letterGroup.className = `letter-group ${altColor ? "alt" : ""}`;
-            letterGroup.textContent = currentLetter;
-            resultsDiv.appendChild(letterGroup);
+            const letterDiv = document.createElement("div");
+            letterDiv.className = `letter ${altColor ? "alt" : ""}`;
+            letterDiv.textContent = currentLetter;
+            row.appendChild(letterDiv);
+          } else {
+            const emptyDiv = document.createElement("div");
+            emptyDiv.className = "letter";
+            row.appendChild(emptyDiv);
           }
 
-          const row = document.createElement("div");
-          row.className = "row";
+          const categoryDiv = document.createElement("div");
+          categoryDiv.className = "category";
+          categoryDiv.textContent = key;
+          row.appendChild(categoryDiv);
 
-          const categoryCell = document.createElement("div");
-          categoryCell.className = "category";
-          categoryCell.textContent = category;
-          row.appendChild(categoryCell);
+          const answerDiv = document.createElement("div");
+          answerDiv.className = "answer";
+          answerDiv.textContent = data[key][0] || "N/A";
+          row.appendChild(answerDiv);
 
-          const answerCell = document.createElement("div");
-          answerCell.className = "answer";
-          answerCell.textContent = filteredData[category][0] || "N/A";
-          row.appendChild(answerCell);
-
-          resultsDiv.appendChild(row);
+          columns[idx % 3].appendChild(row);
         });
+
+        columns.forEach(col => resultsDiv.appendChild(col));
       }
 
-      letterInput.addEventListener("input", () => {
-        if (letterInput.value) {
-          letterInput.style.display = "none";
-          changeLetterButton.style.display = "inline-block";
-          categoryInput.style.display = "inline-block";
-          displayResults(letterInput.value.toUpperCase());
-        }
-      });
-
-      changeLetterButton.addEventListener("click", () => {
-        letterInput.style.display = "inline-block";
-        changeLetterButton.style.display = "none";
-        categoryInput.style.display = "none";
-        letterInput.value = "";
-        categoryInput.value = "";
-        resultsDiv.innerHTML = "";
-      });
-
-      categoryInput.addEventListener("input", () => {
-        const letter = letterInput.value.toUpperCase();
-        displayResults(letter, categoryInput.value);
-      });
+      // Initial rendering
+      displayResults();
     });
   </script>
 </body>
