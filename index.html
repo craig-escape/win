@@ -1,51 +1,210 @@
-.results-container {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 10px;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wake Up & Win Helper</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+      gap: 10px;
+    }
+    .controls input, .controls button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .controls button {
+      background-color: #007BFF;
+      color: #fff;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background-color: #0056b3;
+    }
+    .results-container {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 10px;
+    }
+    .results {
+      flex: 1;
+      min-width: 300px;
+      max-width: 300px;
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      gap: 0;
+      align-items: stretch;
+      border-right: 1px solid #ddd;
+      padding-right: 10px;
+    }
+    .letter,
+    .category,
+    .answer {
+      padding: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .letter {
+      background-color: #ddd;
+      font-weight: bold;
+      text-align: center;
+      color: #333;
+    }
+    .category {
+      font-weight: bold;
+      text-align: left;
+    }
+    .answer {
+      text-align: left;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
+    <button id="changeLetterButton" style="display: none;">Change Letter</button>
+    <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
+  </div>
+  <div class="results-container" id="resultsContainer"></div>
 
-.results {
-  flex: 1;
-  min-width: 300px;
-  max-width: 300px;
-  display: grid;
-  grid-template-columns: auto 1fr 1fr;
-  gap: 0; /* Remove vertical gap */
-  align-items: stretch; /* Make elements the same height */
-  border-right: 1px solid #ddd;
-  padding-right: 10px;
-}
+  <script src="topics.js"></script>
 
-.letter,
-.category,
-.answer {
-  padding: 5px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  height: 50px; /* Ensure all elements have the same height */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  <script>
+        document.addEventListener("DOMContentLoaded", function () {
+      const letterInput = document.getElementById("letterInput");
+      const changeLetterButton = document.getElementById("changeLetterButton");
+      const categoryInput = document.getElementById("categoryInput");
+      const resultsContainer = document.getElementById("resultsContainer");
 
-.letter.alt {
-  background-color: #e4e4e4;
-}
+      // Function to display results in multiple grids
+      function displayResults(letter, categoryFilter = "") {
+        resultsContainer.innerHTML = ""; // Clear previous results
+        const filteredData = {};
 
-.letter {
-  background-color: #ddd;
-  font-weight: bold;
-  text-align: center;
-  color: #333;
-}
+        // Filter by letter and category
+        if (data[letter]) {
+          Object.keys(data[letter]).forEach(category => {
+            if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+              filteredData[category] = data[letter][category];
+            }
+          });
+        }
 
-.category {
-  font-weight: bold;
-  text-align: left;
-}
+        const sortedCategories = Object.keys(filteredData).sort(); // Sort categories alphabetically
+        if (sortedCategories.length === 0) {
+          resultsContainer.innerHTML = "<p>No results found.</p>";
+          return;
+        }
 
-.answer {
-  text-align: left;
-  color: #555;
-}
+        // Calculate available rows based on viewport height
+        const controlsHeight = document.querySelector(".controls").offsetHeight;
+        const viewportHeight = window.innerHeight;
+        const availableHeight = viewportHeight - controlsHeight - 20; // Padding adjustment
+        const rowHeight = 50; // Approximate height for each row (adjust based on styles)
+        const rowsPerGrid = Math.floor(availableHeight / rowHeight);
+
+        // Create grids and populate them
+        let gridCount = 0;
+        let lastLetter = ""; // Track the last letter used
+
+        while (gridCount * rowsPerGrid < sortedCategories.length) {
+          const gridDiv = document.createElement("div");
+          gridDiv.className = "results";
+
+          sortedCategories.slice(
+            gridCount * rowsPerGrid,
+            (gridCount + 1) * rowsPerGrid
+          ).forEach(category => {
+            const currentLetter = category[0].toUpperCase();
+            const letterDiv = document.createElement("div");
+            letterDiv.className = "letter";
+
+            // Only show the letter if it's the first occurrence
+            if (currentLetter !== lastLetter) {
+              letterDiv.textContent = currentLetter;
+              letterDiv.style.backgroundColor = "#ddd";
+            } else {
+              letterDiv.textContent = " ";
+              letterDiv.style.backgroundColor = "transparent";
+            }
+
+            gridDiv.appendChild(letterDiv);
+            lastLetter = currentLetter;
+
+            const categoryCell = document.createElement("div");
+            categoryCell.className = "category";
+            categoryCell.textContent = category;
+            gridDiv.appendChild(categoryCell);
+
+            const answerCell = document.createElement("div");
+            answerCell.className = "answer";
+            answerCell.textContent = filteredData[category][0] || "N/A";
+            gridDiv.appendChild(answerCell);
+          });
+
+          resultsContainer.appendChild(gridDiv);
+          gridCount++;
+        }
+      }
+
+      // Show/hide controls
+      function toggleControls(showInput) {
+        letterInput.style.display = showInput ? "inline-block" : "none";
+        changeLetterButton.style.display = showInput ? "none" : "inline-block";
+        categoryInput.style.display = showInput ? "none" : "inline-block";
+      }
+
+      // Event listeners
+      letterInput.addEventListener("input", () => {
+        if (letterInput.value) {
+          toggleControls(false);
+          displayResults(letterInput.value.toUpperCase());
+        }
+      });
+
+      changeLetterButton.addEventListener("click", () => {
+        toggleControls(true);
+        resultsContainer.innerHTML = "";
+        letterInput.value = "";
+        categoryInput.value = "";
+      });
+
+      categoryInput.addEventListener("input", () => {
+        const letter = letterInput.value.toUpperCase();
+        displayResults(letter, categoryInput.value);
+      });
+
+      // Adjust results container height dynamically
+      function adjustResultsHeight() {
+        const controlsHeight = document.querySelector(".controls").offsetHeight;
+        const viewportHeight = window.innerHeight;
+        resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
+      }
+
+      window.addEventListener("resize", adjustResultsHeight);
+      adjustResultsHeight();
+    });
+  </script>
+</body>
+</html>
