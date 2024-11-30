@@ -87,21 +87,9 @@
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
   <div class="results-container" id="resultsContainer"></div>
+  <script src="topics.js"></script>
 
   <script>
-    const data = {
-      A: {
-        "Animal": ["Ant"],
-        "Actor": ["Angelina Jolie"],
-        "City": ["Amsterdam"]
-      },
-      B: {
-        "Animal": ["Bear"],
-        "Actor": ["Brad Pitt"],
-        "City": ["Boston"]
-      }
-      // Add more letters and categories as needed
-    };
 
     document.addEventListener("DOMContentLoaded", function () {
       const letterInput = document.getElementById("letterInput");
