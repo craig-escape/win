@@ -38,7 +38,7 @@
     }
     .results-container {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       overflow-x: auto;
       padding: 10px;
     }
@@ -59,7 +59,7 @@
       padding: 5px;
       border: 1px solid #ccc;
       font-size: 14px;
-      height: 50px;
+      height: 30px; /* Fixed row height */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -88,16 +88,28 @@
   </div>
   <div class="results-container" id="resultsContainer"></div>
 
-  <script src="topics.js"></script>
-
   <script>
-        document.addEventListener("DOMContentLoaded", function () {
+    const data = {
+      A: {
+        "Animal": ["Ant"],
+        "Actor": ["Angelina Jolie"],
+        "City": ["Amsterdam"]
+      },
+      B: {
+        "Animal": ["Bear"],
+        "Actor": ["Brad Pitt"],
+        "City": ["Boston"]
+      }
+      // Add more letters and categories as needed
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
       const letterInput = document.getElementById("letterInput");
       const changeLetterButton = document.getElementById("changeLetterButton");
       const categoryInput = document.getElementById("categoryInput");
       const resultsContainer = document.getElementById("resultsContainer");
 
-      // Function to display results in multiple grids
+      // Function to display results in up to 4 grids
       function displayResults(letter, categoryFilter = "") {
         resultsContainer.innerHTML = ""; // Clear previous results
         const filteredData = {};
@@ -121,14 +133,15 @@
         const controlsHeight = document.querySelector(".controls").offsetHeight;
         const viewportHeight = window.innerHeight;
         const availableHeight = viewportHeight - controlsHeight - 20; // Padding adjustment
-        const rowHeight = 50; // Approximate height for each row (adjust based on styles)
-        const rowsPerGrid = Math.floor(availableHeight / rowHeight);
+        const rowHeight = 30; // Fixed height for each row
+        const maxGrids = 4; // Max number of grids
+        const rowsPerGrid = Math.floor(availableHeight / rowHeight / maxGrids);
 
         // Create grids and populate them
         let gridCount = 0;
         let lastLetter = ""; // Track the last letter used
 
-        while (gridCount * rowsPerGrid < sortedCategories.length) {
+        while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < maxGrids) {
           const gridDiv = document.createElement("div");
           gridDiv.className = "results";
 
