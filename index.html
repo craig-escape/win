@@ -15,31 +15,45 @@
     }
     .controls {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       padding: 10px;
       background-color: #f8f9fa;
       border-bottom: 1px solid #ddd;
       gap: 10px;
     }
-    .controls input {
+    .controls input, .controls button {
       padding: 8px 12px;
       font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-    .results-container {
-      flex-grow: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      overflow-y: auto;
-      padding: 10px;
-      gap: 10px;
-      box-sizing: border-box;
+    .controls button {
+      background-color: #007BFF;
+      color: #fff;
+      cursor: pointer;
     }
-    .column {
+    .controls button:hover {
+      background-color: #0056b3;
+    }
+    .results-container {
+      flex: 1;
       display: grid;
-      grid-template-rows: auto;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+      padding: 10px;
+      overflow: hidden;
+    }
+    .results {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
       gap: 0;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .row {
+      display: contents;
     }
     .letter {
       background-color: #ddd;
@@ -49,18 +63,19 @@
       color: #333;
       border: 1px solid #ccc;
     }
-    .letter.alt {
-      background-color: #e4e4e4;
-    }
-    .category, .answer {
+    .category {
+      font-weight: bold;
       padding: 5px;
       border: 1px solid #ddd;
       font-size: 12px;
       text-align: left;
-      height: 40px; /* Consistent height */
     }
-    .category {
-      font-weight: bold;
+    .answer {
+      padding: 5px;
+      border: 1px solid #ddd;
+      color: #555;
+      font-size: 12px;
+      text-align: left;
     }
   </style>
 </head>
@@ -78,57 +93,55 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsContainer = document.getElementById("resultsContainer");
 
-      function groupAndSortData(data, letter) {
-        const grouped = {};
-        Object.keys(data).forEach(category => {
-          const firstLetter = category[0].toUpperCase();
-          const group = /^[0-9]/.test(firstLetter) ? "*" : firstLetter;
-          if (!grouped[group]) grouped[group] = [];
-          if (letter === "*" || group === letter) {
-            grouped[group].push({ category, answer: data[category][0] || "N/A" });
-          }
-        });
-        Object.keys(grouped).forEach(group => {
-          grouped[group].sort((a, b) => a.category.localeCompare(b.category));
-        });
-        return grouped;
+      function clearCategoryFieldOnSpecialKeys(event) {
+        if ([" ", "Enter", "Backspace"].includes(event.key)) {
+          event.preventDefault();
+          categoryInput.value = "";
+          displayResults(letterInput.value.toUpperCase());
+        }
       }
 
       function displayResults(letter, categoryFilter = "") {
-        resultsContainer.innerHTML = ""; // Clear previous results
-        const groupedData = groupAndSortData(data, letter);
+        resultsContainer.innerHTML = "";
 
-        if (!groupedData[letter]) {
-          resultsContainer.innerHTML = "<p>No results found.</p>";
-          return;
+        const filteredData = {};
+        if (data[letter]) {
+          Object.keys(data[letter])
+            .filter(category => category.toLowerCase().includes(categoryFilter.toLowerCase()))
+            .sort()
+            .forEach(category => {
+              const key = isNaN(category[0]) ? category[0].toUpperCase() : "*";
+              if (!filteredData[key]) filteredData[key] = [];
+              filteredData[key].push({ category, answer: data[letter][category][0] || "N/A" });
+            });
         }
 
-        Object.keys(groupedData).forEach(group => {
-          const columnDiv = document.createElement("div");
-          columnDiv.className = "column";
+        Object.keys(filteredData).sort().forEach(key => {
+          const keyDiv = document.createElement("div");
+          keyDiv.className = "results";
 
-          let isFirstLetterDisplayed = false;
-          groupedData[group].forEach(item => {
-            if (!isFirstLetterDisplayed) {
-              const letterDiv = document.createElement("div");
-              letterDiv.className = `letter ${group === "*" ? "alt" : ""}`;
-              letterDiv.textContent = group;
-              columnDiv.appendChild(letterDiv);
-              isFirstLetterDisplayed = true;
-            }
+          const headerRow = document.createElement("div");
+          headerRow.className = "row";
 
-            const categoryDiv = document.createElement("div");
-            categoryDiv.className = "category";
-            categoryDiv.textContent = item.category;
-            columnDiv.appendChild(categoryDiv);
+          const letterDiv = document.createElement("div");
+          letterDiv.className = "letter";
+          letterDiv.textContent = key;
+          headerRow.appendChild(letterDiv);
 
-            const answerDiv = document.createElement("div");
-            answerDiv.className = "answer";
-            answerDiv.textContent = item.answer;
-            columnDiv.appendChild(answerDiv);
+          filteredData[key].forEach(item => {
+            const categoryCell = document.createElement("div");
+            categoryCell.className = "category";
+            categoryCell.textContent = item.category;
+            headerRow.appendChild(categoryCell);
+
+            const answerCell = document.createElement("div");
+            answerCell.className = "answer";
+            answerCell.textContent = item.answer;
+            headerRow.appendChild(answerCell);
           });
 
-          resultsContainer.appendChild(columnDiv);
+          keyDiv.appendChild(headerRow);
+          resultsContainer.appendChild(keyDiv);
         });
       }
 
@@ -142,26 +155,10 @@
       });
 
       categoryInput.addEventListener("input", () => {
-        const letter = letterInput.value.toUpperCase();
-        const filter = categoryInput.value.toLowerCase();
-        const filteredData = {};
-
-        Object.keys(data[letter] || {}).forEach(category => {
-          if (category.toLowerCase().includes(filter)) {
-            filteredData[category] = data[letter][category];
-          }
-        });
-
-        displayResults(letter, filter);
+        displayResults(letterInput.value.toUpperCase(), categoryInput.value);
       });
 
-      categoryInput.addEventListener("keydown", event => {
-        if ([" ", "Enter", "Backspace"].includes(event.key)) {
-          event.preventDefault();
-          categoryInput.value = "";
-          displayResults(letterInput.value.toUpperCase());
-        }
-      });
+      categoryInput.addEventListener("keydown", clearCategoryFieldOnSpecialKeys);
     });
   </script>
 </body>
