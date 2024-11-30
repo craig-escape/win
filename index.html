@@ -12,17 +12,39 @@
     .container {
       max-width: 800px;
       margin: auto;
-      text-align: center;
+      position: relative;
+    }
+    .controls {
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+    }
+    input, button {
+      font-size: 14px;
+      padding: 5px 10px;
+      margin: 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
     input {
-      width: 300px;
-      padding: 10px;
-      margin: 10px;
-      font-size: 16px;
-      text-align: center;
+      width: 200px;
+    }
+    button {
+      background-color: #007BFF;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
     }
     .results {
-      margin-top: 20px;
+      margin-top: 60px;
+      max-height: calc(100vh - 100px); /* Ensure results fit on screen */
+      overflow-y: auto;
     }
     table {
       width: 100%;
@@ -30,7 +52,8 @@
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 8px;
+      padding: 4px;
+      font-size: 14px;
       text-align: left;
     }
     th {
@@ -44,25 +67,14 @@
         white-space: nowrap;
       }
     }
-    .result-item {
-      margin: 10px 0;
-      font-size: 18px;
-    }
-    .highlight {
-      color: green;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Wake Up & Win Helper</h1>
-    <p>Step 1: Type your letter below:</p>
-    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
-
-    <p>Step 2: Type a category to filter results:</p>
-    <input type="text" id="categoryInput" placeholder="Search category" />
-
+    <div class="controls">
+      <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
+      <button id="changeLetterButton" style="display: none;">Change Letter</button>
+    </div>
     <div id="results" class="results"></div>
   </div>
 
@@ -70,51 +82,39 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const letterInput = document.getElementById("letterInput");
-      const categoryInput = document.getElementById("categoryInput");
+      const changeLetterButton = document.getElementById("changeLetterButton");
       const resultsDiv = document.getElementById("results");
 
-      // Function to create and populate the table
-      function createTable(data) {
+      // Function to create and populate a compact table
+      function createCompactTable(data) {
         const table = document.createElement("table");
-        table.style.width = "100%";
-        table.style.borderCollapse = "collapse";
-        table.style.marginTop = "20px";
 
         const headerRow = document.createElement("tr");
-
-        // Create table headers
-        const headers = ["Category", "Answer 1", "Answer 2", "Answer 3", "Answer 4", "Answer 5"];
+        const headers = ["Category", "First Answer"];
         headers.forEach(headerText => {
           const th = document.createElement("th");
           th.textContent = headerText;
           th.style.border = "1px solid #ddd";
-          th.style.padding = "10px";
+          th.style.padding = "4px";
           th.style.backgroundColor = "#f4f4f4";
           headerRow.appendChild(th);
         });
-
         table.appendChild(headerRow);
 
-        // Populate the table rows
         Object.keys(data).forEach(category => {
-          const answers = data[category] || [];
           const row = document.createElement("tr");
 
-          // Category column
           const categoryCell = document.createElement("td");
           categoryCell.textContent = category;
           categoryCell.style.border = "1px solid #ddd";
-          categoryCell.style.padding = "10px";
+          categoryCell.style.padding = "4px";
           row.appendChild(categoryCell);
 
-          // Answer columns
-          for (let i = 0; i < 5; i++) {
-            const answerCell = document.createElement("td");
-            answerCell.textContent = answers[i] || ""; // Empty if less than 5 answers
-            answerCell.style.border = "1px solid #ddd";
-            answerCell.style.padding = "10px";
-            row.appendChild(answerCell);
-          }
+          const answerCell = document.createElement("td");
+          answerCell.textContent = data[category][0] || "N/A"; // First answer or N/A
+          answerCell.style.border = "1px solid #ddd";
+          answerCell.style.padding = "4px";
+          row.appendChild(answerCell);
 
           table.appendChild(row);
         });
@@ -125,30 +125,34 @@
       // Event listener to filter and display results
       function displayResults() {
         const letter = letterInput.value.toUpperCase();
-        const categoryFilter = categoryInput.value.toLowerCase();
 
         if (!data[letter]) {
           resultsDiv.innerHTML = "<p>No results found for the selected letter.</p>";
           return;
         }
 
-        const filteredData = {};
-        Object.keys(data[letter]).forEach(category => {
-          if (category.toLowerCase().includes(categoryFilter)) {
-            filteredData[category] = data[letter][category];
-          }
-        });
-
-        if (Object.keys(filteredData).length === 0) {
-          resultsDiv.innerHTML = "<p>No matching categories found.</p>";
-        } else {
-          resultsDiv.innerHTML = ""; // Clear previous results
-          resultsDiv.appendChild(createTable(filteredData));
-        }
+        resultsDiv.innerHTML = ""; // Clear previous results
+        resultsDiv.appendChild(createCompactTable(data[letter]));
       }
 
-      letterInput.addEventListener("input", displayResults);
-      categoryInput.addEventListener("input", displayResults);
+      // Toggle letter input and change button
+      function toggleLetterInput(showInput) {
+        letterInput.style.display = showInput ? "block" : "none";
+        changeLetterButton.style.display = showInput ? "none" : "block";
+      }
+
+      letterInput.addEventListener("input", () => {
+        if (letterInput.value) {
+          toggleLetterInput(false);
+          displayResults();
+        }
+      });
+
+      changeLetterButton.addEventListener("click", () => {
+        toggleLetterInput(true);
+        resultsDiv.innerHTML = "";
+        letterInput.value = "";
+      });
     });
   </script>
 </body>
