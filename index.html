@@ -70,25 +70,9 @@
       }
     }
   </style>
-</head>
-<body>
-  <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
-    <button id="changeLetterButton" style="display: none;">Change Letter</button>
-    <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
-  </div>
-  <div id="results" class="results"></div>
-
+  <script src="topics.js" defer></script> <!-- Load external data file -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const data = {
-        A: { "Actor": "Anthony Hopkins", "Actress": "Angelina Jolie", "Animal": "Alligator" },
-        B: { "Band": "Blur", "Bird": "Blue Jay", "Body part": "Belly" },
-        C: { "Car make or model": "BMW", "Country": "Brazil", "City": "Copenhagen" },
-        D: { "Drink": "Bubble Tea", "Dog breed": "Beagle" },
-        E: { "Electrical item": "Blender", "European City": "Brussels" }
-      };
-
       const resultsDiv = document.getElementById("results");
       const letterInput = document.getElementById("letterInput");
       const categoryInput = document.getElementById("categoryInput");
@@ -155,5 +139,13 @@
       });
     });
   </script>
+</head>
+<body>
+  <div class="controls">
+    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
+    <button id="changeLetterButton" style="display: none;">Change Letter</button>
+    <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
+  </div>
+  <div id="results" class="results"></div>
 </body>
 </html>
