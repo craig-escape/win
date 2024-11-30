@@ -80,7 +80,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.1 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.2 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -94,8 +94,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const categoryInput = document.getElementById("categoryInput");
   const resultsContainer = document.getElementById("resultsContainer");
 
-  // Helper function to alphabetize the data
-  function alphabetizeData(data) {
+  // Helper function to sort and render the data correctly
+  function alphabetizeAndDisplay(data) {
     const sortedData = {};
     Object.keys(data)
       .sort() // Sort letters alphabetically
@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return sortedData;
   }
 
-  const sortedData = alphabetizeData(data); // Alphabetize the data
+  const sortedData = alphabetizeAndDisplay(data); // Ensure the data is always sorted
 
   function displayResults(letter, categoryFilter = "") {
     resultsContainer.innerHTML = ""; // Clear previous results
@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    const sortedCategories = Object.keys(filteredData).sort(); // Ensure categories are sorted alphabetically
+    const sortedCategories = Object.keys(filteredData); // No need to sort again, already sorted
     if (sortedCategories.length === 0) {
       resultsContainer.innerHTML = "<p>No results found.</p>";
       return;
@@ -242,6 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("resize", adjustResultsHeight);
   adjustResultsHeight();
 });
+
 
 
   </script>
