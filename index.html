@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const viewportHeight = window.innerHeight;
     const availableHeight = viewportHeight - controlsHeight; // Total height available for rows
     const rowHeight = 15; // Fixed row height
-    const totalRows = Math.floor(availableHeight / rowHeight); // Total rows that fit in available space
+    const totalRows = Math.floor(1.5 * availableHeight / rowHeight); // Total rows that fit in available space
     const rowsPerGrid = Math.ceil(totalRows / 4); // Distribute rows evenly across 4 grids
 
     // Create grids and populate them
