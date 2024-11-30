@@ -8,19 +8,15 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+      padding: 10px;
+      background-color: #f9f9f9;
     }
     .controls {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      padding: 10px;
-      background-color: #f8f9fa;
-      border-bottom: 1px solid #ddd;
       gap: 10px;
+      margin-bottom: 10px;
     }
     .controls input, .controls button {
       padding: 8px 12px;
@@ -30,153 +26,132 @@
     }
     .controls button {
       background-color: #007BFF;
-      color: #fff;
+      color: white;
       cursor: pointer;
     }
     .controls button:hover {
       background-color: #0056b3;
     }
-    .results {
-      flex: 1;
-      overflow-y: auto;
+    .table-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Dynamic column layout */
-      gap: 0;
-      padding: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Auto-fit columns */
+      gap: 10px;
     }
-    .row {
-      display: contents; /* Allow grid-based alignment for compact layout */
+    .table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: white;
     }
-    .letter {
+    .table th, .table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .table th {
+      background-color: #f1f1f1;
+      font-weight: bold;
+    }
+    .letter-header {
       background-color: #ddd;
       font-weight: bold;
       text-align: center;
-      padding: 5px;
-      color: #333;
-      border: 1px solid #ccc;
     }
-    .letter.alt {
-      background-color: #e4e4e4;
-    }
-    .category {
-      font-weight: bold;
-      padding: 5px;
-      border: 1px solid #ddd;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-    .answer {
-      padding: 5px;
-      border: 1px solid #ddd;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-      color: #555;
+    .letter-header.alt {
+      background-color: #b0c4de;
     }
     @media (max-width: 768px) {
-      .results {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust for smaller screens */
+      .table-container {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Smaller columns on narrow screens */
       }
     }
   </style>
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
-    <button id="changeLetterButton" style="display: none;">Change Letter</button>
-    <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
+    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus>
+    <button id="changeLetterButton">Change Letter</button>
+    <input type="text" id="categoryInput" placeholder="Search category">
   </div>
-  <div id="results" class="results"></div>
 
-  <script src="topics.js"></script>
+  <div id="table-container" class="table-container"></div>
+
   <script>
     document.addEventListener("DOMContentLoaded", function () {
+      const data = {
+        A: { "Actor": "Anthony Hopkins", "Actress": "Angelina Jolie", "Animal": "Alligator" },
+        B: { "Band": "Blur", "Bird": "Blue Jay", "Body part": "Belly" },
+        C: { "Car make or model": "BMW", "Country": "Brazil", "City": "Copenhagen" },
+        D: { "Drink": "Bubble Tea", "Dog breed": "Beagle" },
+        E: { "Electrical item": "Blender", "European City": "Brussels" }
+      };
+
+      const tableContainer = document.getElementById("table-container");
       const letterInput = document.getElementById("letterInput");
-      const changeLetterButton = document.getElementById("changeLetterButton");
       const categoryInput = document.getElementById("categoryInput");
-      const resultsDiv = document.getElementById("results");
+      const changeLetterButton = document.getElementById("changeLetterButton");
 
-      // Function to display results compactly and use full screen width
-      function displayResults(letter, categoryFilter = "") {
-        resultsDiv.innerHTML = ""; // Clear previous results
-        const filteredData = {};
+      function renderTable(letter, filter = "") {
+        tableContainer.innerHTML = ""; // Clear the container
+        const letterData = data[letter] || {};
 
-        // Filter by letter and category
-        if (data[letter]) {
-          Object.keys(data[letter]).forEach(category => {
-            if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
-              filteredData[category] = data[letter][category];
-            }
-          });
-        }
-
-        const sortedCategories = Object.keys(filteredData).sort(); // Sort categories alphabetically
-
-        if (sortedCategories.length === 0) {
-          resultsDiv.innerHTML = "<p>No results found.</p>";
+        if (Object.keys(letterData).length === 0) {
+          tableContainer.innerHTML = "<p>No data available for this letter.</p>";
           return;
         }
 
-        let currentLetter = null;
-        let altColor = false;
+        // Create table
+        const table = document.createElement("table");
+        table.classList.add("table");
 
-        sortedCategories.forEach((category) => {
-          const firstLetter = /^[0-9]/.test(category) ? "0" : category[0].toUpperCase();
+        // Create table header
+        const headerRow = document.createElement("tr");
+        const letterHeader = document.createElement("th");
+        letterHeader.colSpan = 2;
+        letterHeader.textContent = letter.toUpperCase();
+        headerRow.appendChild(letterHeader);
+        table.appendChild(headerRow);
 
-          // Add the letter cell only for the first occurrence of a new letter
-          if (firstLetter !== currentLetter) {
-            currentLetter = firstLetter;
-            altColor = !altColor; // Toggle background color
+        // Add rows for each category
+        Object.entries(letterData).forEach(([category, answer]) => {
+          if (!category.toLowerCase().includes(filter.toLowerCase())) return;
 
-            const letterCell = document.createElement("div");
-            letterCell.className = letter ${altColor ? "alt" : ""};
-            letterCell.textContent = currentLetter;
-            resultsDiv.appendChild(letterCell);
-          } else {
-            // Add an empty cell for subsequent rows in the same group
-            const emptyCell = document.createElement("div");
-            resultsDiv.appendChild(emptyCell);
-          }
-
-          // Add the category and answer cells
-          const categoryCell = document.createElement("div");
-          categoryCell.className = "category";
+          const row = document.createElement("tr");
+          const categoryCell = document.createElement("td");
           categoryCell.textContent = category;
-          resultsDiv.appendChild(categoryCell);
+          const answerCell = document.createElement("td");
+          answerCell.textContent = answer;
 
-          const answerCell = document.createElement("div");
-          answerCell.className = "answer";
-          answerCell.textContent = filteredData[category][0] || "N/A";
-          resultsDiv.appendChild(answerCell);
+          row.appendChild(categoryCell);
+          row.appendChild(answerCell);
+          table.appendChild(row);
         });
-      }
 
-      // Show/hide controls
-      function toggleControls(showInput) {
-        letterInput.style.display = showInput ? "inline-block" : "none";
-        changeLetterButton.style.display = showInput ? "none" : "inline-block";
-        categoryInput.style.display = showInput ? "none" : "inline-block";
+        tableContainer.appendChild(table);
       }
 
       // Event listeners
       letterInput.addEventListener("input", () => {
-        if (letterInput.value) {
-          toggleControls(false);
-          displayResults(letterInput.value.toUpperCase());
+        const letter = letterInput.value.toUpperCase();
+        if (letter && /^[A-Z]$/.test(letter)) {
+          renderTable(letter);
         }
-      });
-
-      changeLetterButton.addEventListener("click", () => {
-        toggleControls(true);
-        resultsDiv.innerHTML = "";
-        letterInput.value = "";
-        categoryInput.value = "";
       });
 
       categoryInput.addEventListener("input", () => {
         const letter = letterInput.value.toUpperCase();
-        displayResults(letter, categoryInput.value);
+        const filter = categoryInput.value;
+        if (letter) {
+          renderTable(letter, filter);
+        }
+      });
+
+      changeLetterButton.addEventListener("click", () => {
+        letterInput.value = "";
+        categoryInput.value = "";
+        tableContainer.innerHTML = "";
+        letterInput.focus();
       });
     });
   </script>
