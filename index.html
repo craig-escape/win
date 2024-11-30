@@ -92,15 +92,39 @@ document.addEventListener("DOMContentLoaded", function () {
   const categoryInput = document.getElementById("categoryInput");
   const resultsContainer = document.getElementById("resultsContainer");
 
+  // Helper function to alphabetize the data
+  function alphabetizeData(data) {
+    const sortedData = {};
+    Object.keys(data)
+      .sort()
+      .forEach(letter => {
+        sortedData[letter] = {};
+        Object.keys(data[letter])
+          .sort()
+          .forEach(category => {
+            sortedData[letter][category] = data[letter][category];
+          });
+      });
+    return sortedData;
+  }
+
+  const sortedData = alphabetizeData(data); // Alphabetize the data
+
   function displayResults(letter, categoryFilter = "") {
     resultsContainer.innerHTML = ""; // Clear previous results
     const filteredData = {};
 
     // Filter by letter and category
-    if (data[letter]) {
-      Object.keys(data[letter]).forEach(category => {
-        if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
-          filteredData[category] = data[letter][category];
+    if (sortedData[letter]) {
+      Object.keys(sortedData[letter]).forEach(category => {
+        if (categoryFilter.length === 1) {
+          // If a single letter is typed in the category search
+          if (category[0].toLowerCase() === categoryFilter.toLowerCase()) {
+            filteredData[category] = sortedData[letter][category];
+          }
+        } else if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          // If more than one letter is typed, do a deeper search
+          filteredData[category] = sortedData[letter][category];
         }
       });
     }
@@ -111,7 +135,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Calculate height dynamically
     const controlsHeight = document.querySelector(".controls").offsetHeight;
     const viewportHeight = window.innerHeight;
     const availableHeight = viewportHeight - controlsHeight; // Total height available for rows
@@ -181,6 +204,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (letterInput.value) {
       toggleControls(false);
       displayResults(letterInput.value.toUpperCase());
+      categoryInput.focus(); // Automatically focus on the search category input
     }
   });
 
@@ -191,9 +215,19 @@ document.addEventListener("DOMContentLoaded", function () {
     categoryInput.value = "";
   });
 
-  categoryInput.addEventListener("input", () => {
+  categoryInput.addEventListener("input", (event) => {
     const letter = letterInput.value.toUpperCase();
-    displayResults(letter, categoryInput.value);
+    const value = categoryInput.value.trim();
+
+    // Clear input on space, enter, or backspace
+    if (event.inputType === "deleteContentBackward" || value === "" || event.data === " ") {
+      categoryInput.value = "";
+      displayResults(letter, "");
+      return;
+    }
+
+    // Perform search
+    displayResults(letter, value);
   });
 
   // Adjust container height dynamically
@@ -206,6 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("resize", adjustResultsHeight);
   adjustResultsHeight();
 });
+
 
   </script>
 </body>
