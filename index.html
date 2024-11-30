@@ -39,37 +39,37 @@
     .results {
       flex: 1;
       overflow-y: auto;
-      padding: 10px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0; /* No gap between results to mimic a table/spreadsheet */
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Fixed column widths */
+      gap: 0;
+      align-content: start;
     }
-    .result-pair {
+    .row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 50px 1fr 1fr;
       border-bottom: 1px solid #ddd;
-      padding: 5px;
+      height: 40px;
       align-items: center;
     }
-    .category {
-      font-weight: bold;
-      text-align: left;
+    .row:nth-child(even) {
+      background-color: #f8f8f8;
     }
-    .answer {
+    .cell {
+      padding: 5px;
+      border-right: 1px solid #ddd;
       text-align: left;
-      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .first-letter {
-      grid-column: 1 / -1;
-      background-color: #f4f4f4;
       font-weight: bold;
-      padding: 5px 10px;
-      border: 1px solid #ddd;
-      margin: 5px 0;
+      text-align: center;
+      background-color: #e4e4e4;
     }
     @media (max-width: 768px) {
-      .result-pair {
-        grid-template-columns: 1fr; /* Stack category and answer on smaller screens */
+      .results {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       }
     }
   </style>
@@ -90,7 +90,7 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsDiv = document.getElementById("results");
 
-      // Display results alphabetized in columns with first letter headers
+      // Function to display results in a grid
       function displayResults(letter, categoryFilter = "") {
         resultsDiv.innerHTML = ""; // Clear previous results
         const filteredData = {};
@@ -111,35 +111,33 @@
           return;
         }
 
-        // Group results by the first letter
+        // Group results by the first letter and create rows
         let currentLetter = null;
         sortedCategories.forEach(category => {
           const firstLetter = category[0].toUpperCase();
 
-          // Add a new "first-letter" header if the first letter changes
+          // Add a new "first-letter" row if the first letter changes
           if (firstLetter !== currentLetter) {
             currentLetter = firstLetter;
-            const firstLetterDiv = document.createElement("div");
-            firstLetterDiv.className = "first-letter";
-            firstLetterDiv.textContent = currentLetter;
-            resultsDiv.appendChild(firstLetterDiv);
+            const firstLetterRow = document.createElement("div");
+            firstLetterRow.className = "row";
+            firstLetterRow.innerHTML = `
+              <div class="cell first-letter">${currentLetter}</div>
+              <div class="cell"></div>
+              <div class="cell"></div>
+            `;
+            resultsDiv.appendChild(firstLetterRow);
           }
 
-          // Create category-answer pair
-          const resultPair = document.createElement("div");
-          resultPair.className = "result-pair";
-
-          const categoryDiv = document.createElement("div");
-          categoryDiv.className = "category";
-          categoryDiv.textContent = category;
-
-          const answerDiv = document.createElement("div");
-          answerDiv.className = "answer";
-          answerDiv.textContent = filteredData[category][0] || "N/A"; // Only display the first answer
-
-          resultPair.appendChild(categoryDiv);
-          resultPair.appendChild(answerDiv);
-          resultsDiv.appendChild(resultPair);
+          // Create a row for category-answer pairs
+          const resultRow = document.createElement("div");
+          resultRow.className = "row";
+          resultRow.innerHTML = `
+            <div class="cell"></div>
+            <div class="cell">${category}</div>
+            <div class="cell">${filteredData[category][0] || "N/A"}</div>
+          `;
+          resultsDiv.appendChild(resultRow);
         });
       }
 
@@ -150,9 +148,9 @@
         categoryInput.style.display = showInput ? "none" : "inline-block";
       }
 
-      // Event listeners for clearing search field on space, enter, or backspace
+      // Event listeners for search field behavior
       categoryInput.addEventListener("keydown", (e) => {
-        if (e.key === " " || e.key === "Enter" || e.key === "Backspace") {
+        if ([" ", "Enter", "Backspace"].includes(e.key)) {
           categoryInput.value = "";
           displayResults(letterInput.value.toUpperCase());
         }
