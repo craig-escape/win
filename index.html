@@ -37,54 +37,47 @@
       background-color: #0056b3;
     }
     .results-container {
+      flex: 1;
+      overflow-y: auto;
       display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
+      flex-wrap: wrap;
       padding: 10px;
+      gap: 20px;
     }
     .results {
       flex: 1;
-      min-width: 300px; /* Adjust based on available screen size */
+      min-width: 300px;
       max-width: 300px;
-      display: grid;
-      grid-template-columns: auto 1fr 1fr;
-      gap: 0;
-      align-items: start;
-      border-right: 1px solid #ddd;
-      padding-right: 10px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .letter-heading {
+      font-weight: bold;
+      font-size: 18px;
+      color: #007BFF;
+      margin: 10px 0;
     }
     .row {
-      display: contents; /* Allow proper alignment in a grid-based structure */
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 10px;
+      padding: 5px 0;
+      border-bottom: 1px solid #ddd;
     }
-    .letter {
-      background-color: #ddd;
-      font-weight: bold;
-      text-align: center;
-      padding: 5px;
-      color: #333;
-      border: 1px solid #ccc;
-    }
-    .letter.alt {
-      background-color: #e4e4e4;
+    .row:nth-child(odd) {
+      background-color: #f4f4f4;
     }
     .category {
       font-weight: bold;
-      padding: 5px;
-      border: 1px solid #ddd;
-      font-size: 12px;
-      text-align: left;
+      color: #333;
+      font-size: 14px;
     }
     .answer {
-      padding: 5px;
-      border: 1px solid #ddd;
       color: #555;
-      font-size: 12px;
-      text-align: left;
-    }
-    @media (max-width: 768px) {
-      .results {
-        max-width: 250px;
-      }
+      font-size: 14px;
     }
   </style>
 </head>
@@ -104,76 +97,74 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsContainer = document.getElementById("resultsContainer");
 
-      // Function to display results in multiple grids
+      // Function to group numeric categories under "*"
+      function groupByFirstLetter(categories) {
+        const grouped = { "*": [] };
+        Object.keys(categories).forEach(category => {
+          const firstChar = /^[0-9]/.test(category) ? "*" : category[0].toUpperCase();
+          if (!grouped[firstChar]) grouped[firstChar] = [];
+          grouped[firstChar].push([category, categories[category]]);
+        });
+        return grouped;
+      }
+
+      // Function to display results
       function displayResults(letter, categoryFilter = "") {
         resultsContainer.innerHTML = ""; // Clear previous results
-        const filteredData = {};
 
-        // Filter by letter and category
-        if (data[letter]) {
-          Object.keys(data[letter]).forEach(category => {
-            if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
-              filteredData[category] = data[letter][category];
-            }
-          });
-        }
-
-        const sortedCategories = Object.keys(filteredData).sort(); // Sort categories alphabetically
-        const resultsPerGrid = 10; // Number of rows per grid
-        let gridCount = 0;
-
-        if (sortedCategories.length === 0) {
+        // Filter and group categories
+        if (!data[letter]) {
           resultsContainer.innerHTML = "<p>No results found.</p>";
           return;
         }
+        const groupedData = groupByFirstLetter(data[letter]);
+        const filteredGroup = Object.keys(groupedData).sort().reduce((acc, key) => {
+          acc[key] = groupedData[key].filter(([category]) =>
+            category.toLowerCase().includes(categoryFilter.toLowerCase())
+          );
+          return acc;
+        }, {});
 
-        // Create grids and populate them
-        while (gridCount * resultsPerGrid < sortedCategories.length) {
-          const gridDiv = document.createElement("div");
-          gridDiv.className = "results";
+        Object.entries(filteredGroup).forEach(([group, entries]) => {
+          if (entries.length === 0) return;
 
-          sortedCategories.slice(
-            gridCount * resultsPerGrid,
-            (gridCount + 1) * resultsPerGrid
-          ).forEach(category => {
-            const letterDiv = document.createElement("div");
-            letterDiv.className = "letter";
-            letterDiv.textContent = category[0].toUpperCase();
-            gridDiv.appendChild(letterDiv);
+          const grid = document.createElement("div");
+          grid.className = "results";
+
+          const heading = document.createElement("div");
+          heading.className = "letter-heading";
+          heading.textContent = group === "*" ? "Numbers" : group;
+          grid.appendChild(heading);
+
+          entries.sort(([a], [b]) => a.localeCompare(b)).forEach(([category, answers], index) => {
+            const row = document.createElement("div");
+            row.className = "row";
 
             const categoryCell = document.createElement("div");
             categoryCell.className = "category";
-            categoryCell.textContent = category;
-            gridDiv.appendChild(categoryCell);
+            categoryCell.textContent = index === 0 ? category : category;
+            row.appendChild(categoryCell);
 
             const answerCell = document.createElement("div");
             answerCell.className = "answer";
-            answerCell.textContent = filteredData[category][0] || "N/A";
-            gridDiv.appendChild(answerCell);
+            answerCell.textContent = answers[0] || "N/A";
+            row.appendChild(answerCell);
+
+            grid.appendChild(row);
           });
 
-          resultsContainer.appendChild(gridDiv);
-          gridCount++;
-        }
-      }
-
-      // Show/hide controls
-      function toggleControls(showInput) {
-        letterInput.style.display = showInput ? "inline-block" : "none";
-        changeLetterButton.style.display = showInput ? "none" : "inline-block";
-        categoryInput.style.display = showInput ? "none" : "inline-block";
+          resultsContainer.appendChild(grid);
+        });
       }
 
       // Event listeners
       letterInput.addEventListener("input", () => {
         if (letterInput.value) {
-          toggleControls(false);
           displayResults(letterInput.value.toUpperCase());
         }
       });
 
       changeLetterButton.addEventListener("click", () => {
-        toggleControls(true);
         resultsContainer.innerHTML = "";
         letterInput.value = "";
         categoryInput.value = "";
