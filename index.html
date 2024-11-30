@@ -7,151 +7,153 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      position: relative;
-    }
-    .controls {
-      position: absolute;
-      top: 0;
-      right: 0;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
-      gap: 5px;
+      height: 100vh;
     }
-    input, button {
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+    }
+    .controls input, .controls button {
+      margin: 5px;
+      padding: 8px 12px;
       font-size: 14px;
-      padding: 5px 10px;
-      margin: 0;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-    input {
-      width: 200px;
-    }
-    button {
+    .controls button {
       background-color: #007BFF;
       color: #fff;
       cursor: pointer;
     }
-    button:hover {
+    .controls button:hover {
       background-color: #0056b3;
     }
     .results {
-      margin-top: 60px;
-      max-height: calc(100vh - 100px); /* Ensure results fit on screen */
+      flex: 1;
       overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
+    .results div {
+      flex: 1 1 calc(25% - 10px); /* Up to 4 columns depending on screen size */
+      display: flex;
+      flex-direction: column;
       border: 1px solid #ddd;
-      padding: 4px;
-      font-size: 14px;
-      text-align: left;
+      padding: 10px;
+      background-color: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
-    th {
-      background-color: #f4f4f4;
+    .category {
       font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .answer {
+      color: #333;
+    }
+    @media (max-width: 1200px) {
+      .results div {
+        flex: 1 1 calc(33.33% - 10px); /* 3 columns */
+      }
     }
     @media (max-width: 768px) {
-      table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
+      .results div {
+        flex: 1 1 calc(50% - 10px); /* 2 columns */
+      }
+    }
+    @media (max-width: 480px) {
+      .results div {
+        flex: 1 1 100%; /* 1 column */
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="controls">
-      <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
-      <button id="changeLetterButton" style="display: none;">Change Letter</button>
-    </div>
-    <div id="results" class="results"></div>
+  <div class="controls">
+    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)" autofocus />
+    <button id="changeLetterButton" style="display: none;">Change Letter</button>
+    <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
+  <div id="results" class="results"></div>
 
   <script src="topics.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const letterInput = document.getElementById("letterInput");
       const changeLetterButton = document.getElementById("changeLetterButton");
+      const categoryInput = document.getElementById("categoryInput");
       const resultsDiv = document.getElementById("results");
 
-      // Function to create and populate a compact table
-      function createCompactTable(data) {
-        const table = document.createElement("table");
+      // Display the results in a responsive grid
+      function displayResults(letter, categoryFilter = "") {
+        resultsDiv.innerHTML = ""; // Clear previous results
+        const filteredData = {};
 
-        const headerRow = document.createElement("tr");
-        const headers = ["Category", "First Answer"];
-        headers.forEach(headerText => {
-          const th = document.createElement("th");
-          th.textContent = headerText;
-          th.style.border = "1px solid #ddd";
-          th.style.padding = "4px";
-          th.style.backgroundColor = "#f4f4f4";
-          headerRow.appendChild(th);
-        });
-        table.appendChild(headerRow);
+        // Filter by letter and category
+        if (data[letter]) {
+          Object.keys(data[letter]).forEach(category => {
+            if (category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+              filteredData[category] = data[letter][category];
+            }
+          });
+        }
 
-        Object.keys(data).forEach(category => {
-          const row = document.createElement("tr");
-
-          const categoryCell = document.createElement("td");
-          categoryCell.textContent = category;
-          categoryCell.style.border = "1px solid #ddd";
-          categoryCell.style.padding = "4px";
-          row.appendChild(categoryCell);
-
-          const answerCell = document.createElement("td");
-          answerCell.textContent = data[category][0] || "N/A"; // First answer or N/A
-          answerCell.style.border = "1px solid #ddd";
-          answerCell.style.padding = "4px";
-          row.appendChild(answerCell);
-
-          table.appendChild(row);
-        });
-
-        return table;
-      }
-
-      // Event listener to filter and display results
-      function displayResults() {
-        const letter = letterInput.value.toUpperCase();
-
-        if (!data[letter]) {
-          resultsDiv.innerHTML = "<p>No results found for the selected letter.</p>";
+        if (Object.keys(filteredData).length === 0) {
+          resultsDiv.innerHTML = "<p>No results found.</p>";
           return;
         }
 
-        resultsDiv.innerHTML = ""; // Clear previous results
-        resultsDiv.appendChild(createCompactTable(data[letter]));
+        // Generate category-answer pairs
+        Object.entries(filteredData).forEach(([category, answers]) => {
+          const resultDiv = document.createElement("div");
+          const categoryDiv = document.createElement("div");
+          categoryDiv.className = "category";
+          categoryDiv.textContent = category;
+
+          const answerDiv = document.createElement("div");
+          answerDiv.className = "answer";
+          answerDiv.textContent = answers[0] || "N/A"; // Only display the first answer
+
+          resultDiv.appendChild(categoryDiv);
+          resultDiv.appendChild(answerDiv);
+          resultsDiv.appendChild(resultDiv);
+        });
       }
 
-      // Toggle letter input and change button
-      function toggleLetterInput(showInput) {
-        letterInput.style.display = showInput ? "block" : "none";
-        changeLetterButton.style.display = showInput ? "none" : "block";
+      // Show/hide controls
+      function toggleControls(showInput) {
+        letterInput.style.display = showInput ? "inline-block" : "none";
+        changeLetterButton.style.display = showInput ? "none" : "inline-block";
+        categoryInput.style.display = showInput ? "none" : "inline-block";
       }
 
+      // Event listeners
       letterInput.addEventListener("input", () => {
         if (letterInput.value) {
-          toggleLetterInput(false);
-          displayResults();
+          toggleControls(false);
+          displayResults(letterInput.value.toUpperCase());
         }
       });
 
       changeLetterButton.addEventListener("click", () => {
-        toggleLetterInput(true);
+        toggleControls(true);
         resultsDiv.innerHTML = "";
         letterInput.value = "";
+        categoryInput.value = "";
+      });
+
+      categoryInput.addEventListener("input", () => {
+        const letter = letterInput.value.toUpperCase();
+        displayResults(letter, categoryInput.value);
       });
     });
   </script>
