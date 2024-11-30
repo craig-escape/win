@@ -37,19 +37,21 @@
       background-color: #0056b3;
     }
     .results-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      grid-auto-rows: auto;
-      gap: 0; /* Remove spacing between grids */
-      padding: 0;
-      overflow: auto;
-      height: calc(100vh - 60px); /* Adjust for controls height */
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 10px;
     }
     .results {
+      flex: 1;
+      min-width: 300px;
+      max-width: 300px;
       display: grid;
       grid-template-columns: auto 1fr 1fr;
+      gap: 0; /* No gap between rows */
       align-items: stretch;
-      gap: 0; /* Remove spacing between categories */
+      border-right: 1px solid #ddd;
+      padding-right: 10px;
     }
     .letter,
     .category,
@@ -93,7 +95,7 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsContainer = document.getElementById("resultsContainer");
 
-      // Function to display results dynamically
+      // Function to display results in up to 4 grids
       function displayResults(letter, categoryFilter = "") {
         resultsContainer.innerHTML = ""; // Clear previous results
         const filteredData = {};
@@ -113,40 +115,59 @@
           return;
         }
 
+        // Calculate available rows and row height
+        const controlsHeight = document.querySelector(".controls").offsetHeight;
+        const viewportHeight = window.innerHeight;
+        const availableHeight = viewportHeight - controlsHeight - 20; // Padding adjustment
+        const rowHeight = Math.max(15, Math.min(30, availableHeight / 40)); // Row height between 15px and 30px
+        const rowsPerGrid = Math.floor(availableHeight / rowHeight / 4); // Divide space across 4 grids
+
         // Create grids and populate them
+        let gridCount = 0;
         let lastLetter = ""; // Track the last letter used
 
-        sortedCategories.forEach(category => {
+        while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
           const gridDiv = document.createElement("div");
           gridDiv.className = "results";
 
-          const currentLetter = category[0].toUpperCase();
-          const letterDiv = document.createElement("div");
-          letterDiv.className = "letter";
+          sortedCategories.slice(
+            gridCount * rowsPerGrid,
+            (gridCount + 1) * rowsPerGrid
+          ).forEach(category => {
+            const currentLetter = category[0].toUpperCase();
+            const letterDiv = document.createElement("div");
+            letterDiv.className = "letter";
 
-          // Only show the letter if it's the first occurrence
-          if (currentLetter !== lastLetter) {
-            letterDiv.textContent = currentLetter;
-            letterDiv.style.backgroundColor = "#ddd";
-          } else {
-            letterDiv.textContent = " ";
-            letterDiv.style.backgroundColor = "transparent";
-          }
+            // Only show the letter if it's the first occurrence
+            if (currentLetter !== lastLetter) {
+              letterDiv.textContent = currentLetter;
+              letterDiv.style.backgroundColor = "#ddd";
+            } else {
+              letterDiv.textContent = " ";
+              letterDiv.style.backgroundColor = "transparent";
+            }
 
-          gridDiv.appendChild(letterDiv);
-          lastLetter = currentLetter;
+            gridDiv.appendChild(letterDiv);
+            lastLetter = currentLetter;
 
-          const categoryCell = document.createElement("div");
-          categoryCell.className = "category";
-          categoryCell.textContent = category;
-          gridDiv.appendChild(categoryCell);
+            const categoryCell = document.createElement("div");
+            categoryCell.className = "category";
+            categoryCell.textContent = category;
+            gridDiv.appendChild(categoryCell);
 
-          const answerCell = document.createElement("div");
-          answerCell.className = "answer";
-          answerCell.textContent = filteredData[category][0] || "N/A";
-          gridDiv.appendChild(answerCell);
+            const answerCell = document.createElement("div");
+            answerCell.className = "answer";
+            answerCell.textContent = filteredData[category][0] || "N/A";
+            gridDiv.appendChild(answerCell);
+          });
 
           resultsContainer.appendChild(gridDiv);
+          gridCount++;
+        }
+
+        // Dynamically set row heights
+        document.querySelectorAll(".letter, .category, .answer").forEach(el => {
+          el.style.height = `${rowHeight}px`;
         });
       }
 
