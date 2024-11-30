@@ -42,17 +42,14 @@
       overflow-x: auto;
       padding: 10px;
     }
-    .results {
-      flex: 1;
-      min-width: 300px;
-      max-width: 300px;
-      display: grid;
-      grid-template-columns: auto 1fr 1fr;
-      gap: 0; /* No gap between rows */
-      align-items: stretch;
-      border-right: 1px solid #ddd;
-      padding-right: 10px;
-    }
+.results {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 0; /* No gap between rows */
+  align-items: start; /* Align rows to the top */
+  border-right: 1px solid #ddd;
+  padding-right: 10px;
+}
     .letter,
     .category,
     .answer {
