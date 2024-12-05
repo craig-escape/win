@@ -80,7 +80,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.11 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.12 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -122,8 +122,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (sortedData[letter]) {
       Object.keys(sortedData[letter]).forEach((category) => {
         if (
-          !categoryFilter ||
-          category.toLowerCase().includes(categoryFilter.toLowerCase())
+          (!categoryFilter || category.toLowerCase().includes(categoryFilter.toLowerCase())) &&
+          (!/^[a-zA-Z]$/.test(categoryFilter) || category.startsWith(categoryFilter.toUpperCase()))
         ) {
           filteredData[category] = sortedData[letter][category];
         }
