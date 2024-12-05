@@ -80,7 +80,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.12 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.13 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -210,7 +210,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     typingTimer = setTimeout(() => {
       isTypingWord = false;
+      categoryInput.value = ""; // Clear input if typing pause exceeds 0.5s
+      displayResults(letter, ""); // Reset results
     }, 500);
+  });
+
+  categoryInput.addEventListener("keydown", (event) => {
+    if (event.key === " " || event.key === "Enter") {
+      categoryInput.value = ""; // Clear input if space or enter is pressed
+      const letter = letterInput.value.toUpperCase();
+      displayResults(letter, ""); // Reset results
+      event.preventDefault(); // Prevent default action for space/enter
+    }
   });
 
   changeLetterButton.addEventListener("click", () => {
