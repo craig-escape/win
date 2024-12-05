@@ -80,7 +80,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.14 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.15 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -94,8 +94,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const categoryInput = document.getElementById("categoryInput");
   const resultsContainer = document.getElementById("resultsContainer");
 
-  let typingTimer; // Timer for detecting typing pauses
-  let lastTypedTime = 0; // Timestamp of the last keypress
+  let typingTimer;
+  let isNewSearch = true;
 
   // Helper function to alphabetize the data
   function alphabetizeData(data) {
@@ -113,17 +113,20 @@ document.addEventListener("DOMContentLoaded", function () {
     return sortedData;
   }
 
-  const sortedData = alphabetizeData(data); // Ensure the data is always sorted
+  const sortedData = alphabetizeData(data);
 
   function displayResults(letter, categoryFilter = "") {
     resultsContainer.innerHTML = ""; // Clear previous results
     const filteredData = {};
 
+    // Filter categories under the selected letter
     if (sortedData[letter]) {
       Object.keys(sortedData[letter]).forEach((category) => {
         if (
-          (!categoryFilter || category.toLowerCase().includes(categoryFilter.toLowerCase())) &&
-          (!/^[a-zA-Z]$/.test(categoryFilter) || category.startsWith(categoryFilter.toUpperCase()))
+          !categoryFilter ||
+          (isNewSearch
+            ? category.toLowerCase().startsWith(categoryFilter.toLowerCase())
+            : category.toLowerCase().includes(categoryFilter.toLowerCase()))
         ) {
           filteredData[category] = sortedData[letter][category];
         }
@@ -136,110 +139,95 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    // Calculate available height and rows per column
     const controlsHeight = document.querySelector(".controls").offsetHeight;
     const viewportHeight = window.innerHeight;
     const availableHeight = viewportHeight - controlsHeight;
-    const rowHeight = 15;
-    const totalRows = Math.floor(2 * availableHeight / rowHeight);
-    const rowsPerGrid = Math.ceil(totalRows / 4);
+    const rowHeight = 25; // Approximate row height
+    const totalRows = Math.floor(availableHeight / rowHeight);
+    const columns = 4; // Number of columns
+    const rowsPerColumn = Math.ceil(totalRows / columns);
 
-    let gridCount = 0;
-    let lastLetter = "";
+    // Create columns and populate them
+    let columnDiv = null;
+    sortedCategories.forEach((category, index) => {
+      if (index % rowsPerColumn === 0) {
+        columnDiv = document.createElement("div");
+        columnDiv.className = "results";
+        resultsContainer.appendChild(columnDiv);
+      }
 
-    while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
-      const gridDiv = document.createElement("div");
-      gridDiv.className = "results";
-      gridDiv.style.justifyContent = "flex-start";
+      const letterDiv = document.createElement("div");
+      letterDiv.className = "letter";
+      letterDiv.textContent = letter.toUpperCase();
 
-      sortedCategories
-        .slice(gridCount * rowsPerGrid, (gridCount + 1) * rowsPerGrid)
-        .forEach((category) => {
-          const currentLetter = category[0].toUpperCase();
-          const letterDiv = document.createElement("div");
-          letterDiv.className = "letter";
+      const categoryDiv = document.createElement("div");
+      categoryDiv.className = "category";
+      categoryDiv.textContent = category;
 
-          if (currentLetter !== lastLetter) {
-            letterDiv.textContent = currentLetter;
-            letterDiv.style.backgroundColor = "#ddd";
-          } else {
-            letterDiv.textContent = " ";
-            letterDiv.style.backgroundColor = "transparent";
-          }
+      const answerDiv = document.createElement("div");
+      answerDiv.className = "answer";
+      answerDiv.textContent = filteredData[category][0] || "N/A";
 
-          gridDiv.appendChild(letterDiv);
-          lastLetter = currentLetter;
-
-          const categoryCell = document.createElement("div");
-          categoryCell.className = "category";
-          categoryCell.textContent = category;
-          gridDiv.appendChild(categoryCell);
-
-          const answerCell = document.createElement("div");
-          answerCell.className = "answer";
-          answerCell.textContent = filteredData[category][0] || "N/A";
-          gridDiv.appendChild(answerCell);
-        });
-
-      resultsContainer.appendChild(gridDiv);
-      gridCount++;
-    }
-
-    document.querySelectorAll(".letter, .category, .answer").forEach((el) => {
-      el.style.height = `${rowHeight}px`;
+      columnDiv.appendChild(letterDiv);
+      columnDiv.appendChild(categoryDiv);
+      columnDiv.appendChild(answerDiv);
     });
   }
 
   letterInput.addEventListener("input", () => {
     const letter = letterInput.value.toUpperCase();
     if (letter) {
-      displayResults(letter);
-      categoryInput.style.display = "inline-block";
-      categoryInput.focus();
+      displayResults(letter); // Display categories for the selected letter
       letterInput.style.display = "none";
       changeLetterButton.style.display = "inline-block";
+      categoryInput.style.display = "inline-block";
+      categoryInput.focus(); // Focus on category input
     }
-  });
-
-  categoryInput.addEventListener("keydown", (event) => {
-    const currentTime = Date.now();
-
-    // Check for space or enter key to reset
-    if (event.key === " " || event.key === "Enter") {
-      categoryInput.value = ""; // Clear input
-      const letter = letterInput.value.toUpperCase();
-      displayResults(letter, ""); // Reset results
-      event.preventDefault(); // Prevent default action for space/enter
-      return;
-    }
-
-    // Check for pause > 0.5 seconds
-    if (currentTime - lastTypedTime > 500) {
-      const letter = event.key.toUpperCase();
-      categoryInput.value = letter; // Reset input to the new letter
-      displayResults(letterInput.value.toUpperCase(), letter); // Display filtered results
-    }
-
-    lastTypedTime = currentTime; // Update the last typed time
   });
 
   changeLetterButton.addEventListener("click", () => {
     letterInput.value = "";
     categoryInput.value = "";
     resultsContainer.innerHTML = "";
-    categoryInput.style.display = "none";
     letterInput.style.display = "inline-block";
     changeLetterButton.style.display = "none";
+    categoryInput.style.display = "none";
     letterInput.focus();
   });
 
-  function adjustResultsHeight() {
-    const controlsHeight = document.querySelector(".controls").offsetHeight;
-    const viewportHeight = window.innerHeight;
-    resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
-  }
+  categoryInput.addEventListener("input", () => {
+    clearTimeout(typingTimer);
+    const letter = letterInput.value.toUpperCase();
+    const value = categoryInput.value.trim();
 
-  window.addEventListener("resize", adjustResultsHeight);
-  adjustResultsHeight();
+    if (value.length === 1 && isNewSearch) {
+      // Filter categories by single starting letter
+      displayResults(letter, value);
+    } else {
+      // Perform deeper search within categories
+      displayResults(letter, value);
+      isNewSearch = false;
+    }
+
+    typingTimer = setTimeout(() => {
+      isNewSearch = true; // Reset search mode after pause
+    }, 500);
+  });
+
+  categoryInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault(); // Prevent default behavior
+      categoryInput.value = ""; // Clear input
+      displayResults(letterInput.value.toUpperCase()); // Reset to original letter categories
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    const letter = letterInput.value.toUpperCase();
+    const value = categoryInput.value.trim();
+    displayResults(letter, value); // Re-render results on resize
+  });
 });
 
   </script>
