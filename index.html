@@ -80,7 +80,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.9 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.10 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -139,8 +139,24 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Maintain the original grid-like formatting
-    sortedCategories.forEach((category) => {
+    // Calculate available height and rows per column
+    const controlsHeight = document.querySelector(".controls").offsetHeight;
+    const viewportHeight = window.innerHeight;
+    const availableHeight = viewportHeight - controlsHeight;
+    const rowHeight = 25; // Approximate row height
+    const totalRows = Math.floor(availableHeight / rowHeight);
+    const columns = 4; // Number of columns
+    const rowsPerColumn = Math.ceil(totalRows / columns);
+
+    // Create columns and populate them
+    let columnDiv = null;
+    sortedCategories.forEach((category, index) => {
+      if (index % rowsPerColumn === 0) {
+        columnDiv = document.createElement("div");
+        columnDiv.className = "results";
+        resultsContainer.appendChild(columnDiv);
+      }
+
       const letterDiv = document.createElement("div");
       letterDiv.className = "letter";
       letterDiv.textContent = letter.toUpperCase();
@@ -153,9 +169,9 @@ document.addEventListener("DOMContentLoaded", function () {
       answerDiv.className = "answer";
       answerDiv.textContent = filteredData[category][0] || "N/A";
 
-      resultsContainer.appendChild(letterDiv);
-      resultsContainer.appendChild(categoryDiv);
-      resultsContainer.appendChild(answerDiv);
+      columnDiv.appendChild(letterDiv);
+      columnDiv.appendChild(categoryDiv);
+      columnDiv.appendChild(answerDiv);
     });
   }
 
@@ -206,7 +222,14 @@ document.addEventListener("DOMContentLoaded", function () {
       displayResults(letterInput.value.toUpperCase()); // Reset to original letter categories
     }
   });
+
+  window.addEventListener("resize", () => {
+    const letter = letterInput.value.toUpperCase();
+    const value = categoryInput.value.trim();
+    displayResults(letter, value); // Re-render results on resize
+  });
 });
+
 
   </script>
 </body>
