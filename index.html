@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wake Up & Win Helper</title>
+  <title>Little Helper</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -80,7 +80,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.5 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.9 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -94,18 +94,18 @@ document.addEventListener("DOMContentLoaded", function () {
   const categoryInput = document.getElementById("categoryInput");
   const resultsContainer = document.getElementById("resultsContainer");
 
-  let typingTimer; // Timer for detecting typing pauses
-  let isTypingWord = false; // Track if a word is being typed
+  let typingTimer;
+  let isNewSearch = true;
 
   // Helper function to alphabetize the data
   function alphabetizeData(data) {
     const sortedData = {};
     Object.keys(data)
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })) // Sort letters case-insensitively
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
       .forEach((letter) => {
         sortedData[letter] = {};
         Object.keys(data[letter])
-          .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })) // Sort categories case-insensitively
+          .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
           .forEach((category) => {
             sortedData[letter][category] = data[letter][category];
           });
@@ -113,117 +113,60 @@ document.addEventListener("DOMContentLoaded", function () {
     return sortedData;
   }
 
-  const sortedData = alphabetizeData(data); // Ensure the data is always sorted
+  const sortedData = alphabetizeData(data);
 
   function displayResults(letter, categoryFilter = "") {
     resultsContainer.innerHTML = ""; // Clear previous results
     const filteredData = {};
 
-    // If no category filter is applied, display all categories for the letter
+    // Filter categories under the selected letter
     if (sortedData[letter]) {
-      Object.keys(sortedData[letter])
-        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })) // Ensure categories are sorted alphabetically
-        .forEach((category) => {
-          if (
-            !categoryFilter ||
-            category.toLowerCase().includes(categoryFilter.toLowerCase())
-          ) {
-            filteredData[category] = sortedData[letter][category];
-          }
-        });
+      Object.keys(sortedData[letter]).forEach((category) => {
+        if (
+          !categoryFilter ||
+          (isNewSearch
+            ? category.toLowerCase().startsWith(categoryFilter.toLowerCase())
+            : category.toLowerCase().includes(categoryFilter.toLowerCase()))
+        ) {
+          filteredData[category] = sortedData[letter][category];
+        }
+      });
     }
 
-    const sortedCategories = Object.keys(filteredData); // Already sorted
+    const sortedCategories = Object.keys(filteredData);
     if (sortedCategories.length === 0) {
       resultsContainer.innerHTML = "<p>No results found.</p>";
       return;
     }
 
-    const controlsHeight = document.querySelector(".controls").offsetHeight;
-    const viewportHeight = window.innerHeight;
-    const availableHeight = viewportHeight - controlsHeight; // Total height available for rows
-    const rowHeight = 15; // Fixed row height
-    const totalRows = Math.floor(2 * availableHeight / rowHeight); // Adjusted total rows calculation
-    const rowsPerGrid = Math.ceil(totalRows / 4); // Divide rows evenly across 4 grids
+    // Maintain the original grid-like formatting
+    sortedCategories.forEach((category) => {
+      const letterDiv = document.createElement("div");
+      letterDiv.className = "letter";
+      letterDiv.textContent = letter.toUpperCase();
 
-    // Create grids and populate them
-    let gridCount = 0;
-    let lastLetter = ""; // Track the last letter used
+      const categoryDiv = document.createElement("div");
+      categoryDiv.className = "category";
+      categoryDiv.textContent = category;
 
-    while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
-      const gridDiv = document.createElement("div");
-      gridDiv.className = "results";
-      gridDiv.style.justifyContent = "flex-start"; // Ensure items are top-aligned within each grid
+      const answerDiv = document.createElement("div");
+      answerDiv.className = "answer";
+      answerDiv.textContent = filteredData[category][0] || "N/A";
 
-      sortedCategories
-        .slice(gridCount * rowsPerGrid, (gridCount + 1) * rowsPerGrid)
-        .forEach((category) => {
-          const currentLetter = category[0].toUpperCase();
-          const letterDiv = document.createElement("div");
-          letterDiv.className = "letter";
-
-          // Show the letter only for the first category of the group
-          if (currentLetter !== lastLetter) {
-            letterDiv.textContent = currentLetter;
-            letterDiv.style.backgroundColor = "#ddd";
-          } else {
-            letterDiv.textContent = " ";
-            letterDiv.style.backgroundColor = "transparent";
-          }
-
-          gridDiv.appendChild(letterDiv);
-          lastLetter = currentLetter;
-
-          const categoryCell = document.createElement("div");
-          categoryCell.className = "category";
-          categoryCell.textContent = category;
-          gridDiv.appendChild(categoryCell);
-
-          const answerCell = document.createElement("div");
-          answerCell.className = "answer";
-          answerCell.textContent = filteredData[category][0] || "N/A";
-          gridDiv.appendChild(answerCell);
-        });
-
-      resultsContainer.appendChild(gridDiv);
-      gridCount++;
-    }
-
-    // Apply fixed row height dynamically
-    document.querySelectorAll(".letter, .category, .answer").forEach((el) => {
-      el.style.height = `${rowHeight}px`;
+      resultsContainer.appendChild(letterDiv);
+      resultsContainer.appendChild(categoryDiv);
+      resultsContainer.appendChild(answerDiv);
     });
   }
-
-  // Handle switching between letters and word searches
-  categoryInput.addEventListener("input", (event) => {
-    clearTimeout(typingTimer);
-    const letter = letterInput.value.toUpperCase();
-    const value = categoryInput.value.trim();
-
-    if (value.length === 1 && !isTypingWord) {
-      // Single letter typed, switch to a new letter
-      letterInput.value = value.toUpperCase(); // Update letter input
-      categoryInput.value = ""; // Reset category input
-      displayResults(value.toUpperCase());
-    } else {
-      // Treat as a word if there is no pause
-      isTypingWord = true;
-      displayResults(letter, value); // Filter results by category
-    }
-
-    // Set timer to detect pause
-    typingTimer = setTimeout(() => {
-      isTypingWord = false; // Reset to letter switching mode
-    }, 500);
-  });
 
   letterInput.addEventListener("input", () => {
     const letter = letterInput.value.toUpperCase();
     if (letter) {
-      displayResults(letter); // Display results for the selected letter
-      categoryInput.style.display = "inline-block"; // Show category input
-      categoryInput.focus(); // Automatically focus on the search category input
+      displayResults(letter); // Display categories for the selected letter
+      letterInput.style.display = "none";
+      changeLetterButton.style.display = "inline-block";
+      categoryInput.style.display = "inline-block";
+      categoryInput.focus(); // Focus on category input
     }
   });
 
@@ -231,19 +174,38 @@ document.addEventListener("DOMContentLoaded", function () {
     letterInput.value = "";
     categoryInput.value = "";
     resultsContainer.innerHTML = "";
-    categoryInput.style.display = "none"; // Hide category input
+    letterInput.style.display = "inline-block";
+    changeLetterButton.style.display = "none";
+    categoryInput.style.display = "none";
     letterInput.focus();
   });
 
-  // Adjust container height dynamically
-  function adjustResultsHeight() {
-    const controlsHeight = document.querySelector(".controls").offsetHeight;
-    const viewportHeight = window.innerHeight;
-    resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
-  }
+  categoryInput.addEventListener("input", () => {
+    clearTimeout(typingTimer);
+    const letter = letterInput.value.toUpperCase();
+    const value = categoryInput.value.trim();
 
-  window.addEventListener("resize", adjustResultsHeight);
-  adjustResultsHeight();
+    if (value.length === 1 && isNewSearch) {
+      // Filter categories by single starting letter
+      displayResults(letter, value);
+    } else {
+      // Perform deeper search within categories
+      displayResults(letter, value);
+      isNewSearch = false;
+    }
+
+    typingTimer = setTimeout(() => {
+      isNewSearch = true; // Reset search mode after pause
+    }, 500);
+  });
+
+  categoryInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault(); // Prevent default behavior
+      categoryInput.value = ""; // Clear input
+      displayResults(letterInput.value.toUpperCase()); // Reset to original letter categories
+    }
+  });
 });
 
   </script>
