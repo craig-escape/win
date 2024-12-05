@@ -1,3 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wake Up & Win Helper</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+      gap: 10px;
+    }
+    .controls input, .controls button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .controls button {
+      background-color: #007BFF;
+      color: #fff;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background-color: #0056b3;
+    }
+.results-container {
+  display: flex;
+  align-items: flex-start; /* Align the grids to the top */
+  overflow-x: auto;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr; /* Adjust as per column requirements */
+  align-items: start; /* Align items in the grid to the top */
+  justify-content: flex-start; /* Ensure content starts from the top-left */
+  gap: 0; /* Remove gaps between rows */
+  padding: 0;
+  border-right: 1px solid #ddd;
+  padding-right: 10px;
+}
+    .letter,
+    .category,
+    .answer {
+      padding: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .letter {
+      background-color: #ddd;
+      font-weight: bold;
+      text-align: center;
+      color: #333;
+    }
+    .category {
+      font-weight: bold;
+      text-align: left;
+    }
+    .answer {
+      text-align: left;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.6 Enter letter (A-Z)" autofocus />
+    <button id="changeLetterButton" style="display: none;">Change Letter</button>
+    <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
+  </div>
+  <div class="results-container" id="resultsContainer"></div>
+
+  <script src="topics.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const letterInput = document.getElementById("letterInput");
@@ -161,3 +250,6 @@ document.addEventListener("DOMContentLoaded", function () {
   adjustResultsHeight();
 });
 </script>
+
+</body>
+</html>
