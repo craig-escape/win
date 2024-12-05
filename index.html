@@ -80,7 +80,7 @@
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.7 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.8 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const resultsContainer = document.getElementById("resultsContainer");
 
   let typingTimer;
-  let isNewSearch = true; // Determines whether we're filtering by first letter or deeper search
+  let isNewSearch = true;
 
   // Helper function to alphabetize the data
   function alphabetizeData(data) {
@@ -117,8 +117,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function displayResults(letter, categoryFilter = "") {
     resultsContainer.innerHTML = ""; // Clear previous results
-
     const filteredData = {};
+
+    // Filter categories under the selected letter
     if (sortedData[letter]) {
       Object.keys(sortedData[letter]).forEach((category) => {
         if (
@@ -132,16 +133,37 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    if (Object.keys(filteredData).length === 0) {
+    const sortedCategories = Object.keys(filteredData);
+    if (sortedCategories.length === 0) {
       resultsContainer.innerHTML = "<p>No results found.</p>";
       return;
     }
 
-    Object.keys(filteredData).forEach((category) => {
-      const categoryDiv = document.createElement("div");
-      categoryDiv.className = "category";
-      categoryDiv.textContent = category;
-      resultsContainer.appendChild(categoryDiv);
+    sortedCategories.forEach((category) => {
+      const currentLetter = category[0].toUpperCase();
+
+      // Letter cell
+      const letterCell = document.createElement("div");
+      letterCell.className = "letter";
+      letterCell.textContent = currentLetter;
+
+      // Category cell
+      const categoryCell = document.createElement("div");
+      categoryCell.className = "category";
+      categoryCell.textContent = category;
+
+      // Answer cell (first item of the category)
+      const answerCell = document.createElement("div");
+      answerCell.className = "answer";
+      answerCell.textContent = filteredData[category][0] || "N/A";
+
+      // Append to the grid
+      const gridDiv = document.createElement("div");
+      gridDiv.className = "results";
+      gridDiv.appendChild(letterCell);
+      gridDiv.appendChild(categoryCell);
+      gridDiv.appendChild(answerCell);
+      resultsContainer.appendChild(gridDiv);
     });
   }
 
@@ -193,6 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
 
 </script>
 
