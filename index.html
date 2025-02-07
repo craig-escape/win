@@ -200,27 +200,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  categoryInput.addEventListener("keydown", (event) => {
-    const currentTime = Date.now();
+ categoryInput.addEventListener("keydown", (event) => {
+  const currentTime = Date.now();
 
-    // Check for space or enter key to reset
-    if (event.key === " " || event.key === "Enter") {
-      categoryInput.value = ""; // Clear input
-      const letter = letterInput.value.toUpperCase();
-      displayResults(letter, ""); // Reset results
-      event.preventDefault(); // Prevent default action for space/enter
-      return;
-    }
+  // If space or backspace is pressed, clear input and reset results
+  if (event.key === " " || event.key === "Backspace") {
+    categoryInput.value = ""; // Clear input
+    const letter = letterInput.value.toUpperCase();
+    displayResults(letter, ""); // Reset results to show all categories for the letter
+    event.preventDefault(); // Prevent the default space/backspace behavior
+    return;
+  }
 
-    // Check for pause > 0.5 seconds
-    if (currentTime - lastTypedTime > 500) {
-      const letter = event.key.toUpperCase();
-      categoryInput.value = letter; // Reset input to the new letter
-      displayResults(letterInput.value.toUpperCase(), letter); // Display filtered results
-    }
+  // Check for pause > 0.5 seconds to filter by a new letter
+  if (currentTime - lastTypedTime > 500) {
+    const letter = event.key.toUpperCase();
+    categoryInput.value = letter; // Reset input to the new letter
+    displayResults(letterInput.value.toUpperCase(), letter); // Display filtered results
+  }
 
-    lastTypedTime = currentTime; // Update the last typed time
-  });
+  lastTypedTime = currentTime; // Update the last typed time
+});
+
 
   changeLetterButton.addEventListener("click", () => {
     letterInput.value = "";
