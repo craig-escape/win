@@ -200,8 +200,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
- categoryInput.addEventListener("keydown", (event) => {
+categoryInput.addEventListener("keydown", (event) => {
   const currentTime = Date.now();
+
+  // Ignore non-alphanumeric and non-space/backspace keys
+  if (!/^[a-zA-Z0-9]$/.test(event.key) && event.key !== "Backspace" && event.key !== " ") {
+    return; // Exit without doing anything for non-matching keys
+  }
 
   // Space or backspace clears the input and resets to the initial letter's categories
   if (event.key === " " || event.key === "Backspace") {
@@ -227,8 +232,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   lastTypedTime = currentTime; // Update the timestamp of the last keypress
 });
-
-
 
 
   changeLetterButton.addEventListener("click", () => {
