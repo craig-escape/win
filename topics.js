@@ -42,7 +42,7 @@
     "Job title": ["Architect", "Astronomer"],
     "Kitchen appliance": ["Air fryer", "Blender"],
     "Male celebrity": ["Anthony Hopkins", "Adam Driver"],
-    "Male singer": ["Ed Sheeran", "Elvis Presley"],
+    "Male singer": ["Adam Ant"],
     "Movie title": ["Avatar", "Anchorman"],
     "Musical artist": ["Adele", "Ariana Grande"],
     "Musical instrument": ["Accordion", "Acoustic Guitar"],
