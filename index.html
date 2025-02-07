@@ -115,79 +115,81 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const sortedData = alphabetizeData(data); // Ensure the data is always sorted
 
-  function displayResults(letter, categoryFilter = "") {
-    resultsContainer.innerHTML = ""; // Clear previous results
-    const filteredData = {};
+ function displayResults(letter, categoryFilter = "") {
+  resultsContainer.innerHTML = ""; // Clear previous results
+  const filteredData = {};
 
-    if (sortedData[letter]) {
-      Object.keys(sortedData[letter]).forEach((category) => {
-        if (
-          (!categoryFilter || category.toLowerCase().includes(categoryFilter.toLowerCase())) &&
-          (!/^[a-zA-Z]$/.test(categoryFilter) || category.startsWith(categoryFilter.toUpperCase()))
-        ) {
-          filteredData[category] = sortedData[letter][category];
-        }
-      });
-    }
-
-    const sortedCategories = Object.keys(filteredData);
-    if (sortedCategories.length === 0) {
-      resultsContainer.innerHTML = "<p>No results found.</p>";
-      return;
-    }
-
-    const controlsHeight = document.querySelector(".controls").offsetHeight;
-    const viewportHeight = window.innerHeight;
-    const availableHeight = viewportHeight - controlsHeight;
-    const rowHeight = 15;
-    const totalRows = Math.floor(2 * availableHeight / rowHeight);
-    const rowsPerGrid = Math.ceil(totalRows / 4);
-
-    let gridCount = 0;
-    let lastLetter = "";
-
-    while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
-      const gridDiv = document.createElement("div");
-      gridDiv.className = "results";
-      gridDiv.style.justifyContent = "flex-start";
-
-      sortedCategories
-        .slice(gridCount * rowsPerGrid, (gridCount + 1) * rowsPerGrid)
-        .forEach((category) => {
-          const currentLetter = category[0].toUpperCase();
-          const letterDiv = document.createElement("div");
-          letterDiv.className = "letter";
-
-          if (currentLetter !== lastLetter) {
-            letterDiv.textContent = currentLetter;
-            letterDiv.style.backgroundColor = "#ddd";
-          } else {
-            letterDiv.textContent = " ";
-            letterDiv.style.backgroundColor = "transparent";
-          }
-
-          gridDiv.appendChild(letterDiv);
-          lastLetter = currentLetter;
-
-          const categoryCell = document.createElement("div");
-          categoryCell.className = "category";
-          categoryCell.textContent = category;
-          gridDiv.appendChild(categoryCell);
-
-          const answerCell = document.createElement("div");
-          answerCell.className = "answer";
-          answerCell.textContent = filteredData[category][0] || "N/A";
-          gridDiv.appendChild(answerCell);
-        });
-
-      resultsContainer.appendChild(gridDiv);
-      gridCount++;
-    }
-
-    document.querySelectorAll(".letter, .category, .answer").forEach((el) => {
-      el.style.height = `${rowHeight}px`;
+  if (sortedData[letter]) {
+    Object.keys(sortedData[letter]).forEach((category) => {
+      // Convert both the category and filter to lowercase for comparison
+      if (
+        (!categoryFilter || category.toLowerCase().includes(categoryFilter.toLowerCase())) &&
+        (!/^[a-zA-Z]$/.test(categoryFilter) || category.toLowerCase().startsWith(categoryFilter.toLowerCase()))
+      ) {
+        filteredData[category] = sortedData[letter][category];
+      }
     });
   }
+
+  const sortedCategories = Object.keys(filteredData);
+  if (sortedCategories.length === 0) {
+    resultsContainer.innerHTML = "<p>No results found.</p>";
+    return;
+  }
+
+  const controlsHeight = document.querySelector(".controls").offsetHeight;
+  const viewportHeight = window.innerHeight;
+  const availableHeight = viewportHeight - controlsHeight;
+  const rowHeight = 15;
+  const totalRows = Math.floor(2 * availableHeight / rowHeight);
+  const rowsPerGrid = Math.ceil(totalRows / 4);
+
+  let gridCount = 0;
+  let lastLetter = "";
+
+  while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
+    const gridDiv = document.createElement("div");
+    gridDiv.className = "results";
+    gridDiv.style.justifyContent = "flex-start";
+
+    sortedCategories
+      .slice(gridCount * rowsPerGrid, (gridCount + 1) * rowsPerGrid)
+      .forEach((category) => {
+        const currentLetter = category[0].toUpperCase();
+        const letterDiv = document.createElement("div");
+        letterDiv.className = "letter";
+
+        if (currentLetter !== lastLetter) {
+          letterDiv.textContent = currentLetter;
+          letterDiv.style.backgroundColor = "#ddd";
+        } else {
+          letterDiv.textContent = " ";
+          letterDiv.style.backgroundColor = "transparent";
+        }
+
+        gridDiv.appendChild(letterDiv);
+        lastLetter = currentLetter;
+
+        const categoryCell = document.createElement("div");
+        categoryCell.className = "category";
+        categoryCell.textContent = category;
+        gridDiv.appendChild(categoryCell);
+
+        const answerCell = document.createElement("div");
+        answerCell.className = "answer";
+        answerCell.textContent = filteredData[category][0] || "N/A";
+        gridDiv.appendChild(answerCell);
+      });
+
+    resultsContainer.appendChild(gridDiv);
+    gridCount++;
+  }
+
+  document.querySelectorAll(".letter, .category, .answer").forEach((el) => {
+    el.style.height = `${rowHeight}px`;
+  });
+}
+
 
   letterInput.addEventListener("input", () => {
     const letter = letterInput.value.toUpperCase();
