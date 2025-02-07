@@ -212,15 +212,15 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  // Check for pause > 0.5 seconds to filter by a new letter
+  // Check for pause > 0.5 seconds to filter results, but don't change the input value manually
   if (currentTime - lastTypedTime > 500) {
     const letter = event.key.toUpperCase();
-    categoryInput.value = letter; // Reset input to the new letter
     displayResults(letterInput.value.toUpperCase(), letter); // Display filtered results
   }
 
   lastTypedTime = currentTime; // Update the last typed time
 });
+
 
 
   changeLetterButton.addEventListener("click", () => {
