@@ -203,23 +203,31 @@ document.addEventListener("DOMContentLoaded", function () {
  categoryInput.addEventListener("keydown", (event) => {
   const currentTime = Date.now();
 
-  // If space or backspace is pressed, clear input and reset results
+  // Space or backspace clears the input and resets to the initial letter's categories
   if (event.key === " " || event.key === "Backspace") {
-    categoryInput.value = ""; // Clear input
+    categoryInput.value = ""; // Clear the input box
     const letter = letterInput.value.toUpperCase();
-    displayResults(letter, ""); // Reset results to show all categories for the letter
-    event.preventDefault(); // Prevent the default space/backspace behavior
+    displayResults(letter, ""); // Reset results to the initial letter
+    event.preventDefault(); // Prevent default space/backspace behavior
     return;
   }
 
-  // Check for pause > 0.5 seconds to filter results, but don't change the input value manually
-  if (currentTime - lastTypedTime > 500) {
-    const letter = event.key.toUpperCase();
-    displayResults(letterInput.value.toUpperCase(), letter); // Display filtered results
+  // Check for pause (> 1 second) between key presses
+  if (currentTime - lastTypedTime > 1000) {
+    const letter = event.key.toUpperCase(); // Get the new letter
+    categoryInput.value = letter; // Clear and reset with the new letter
+    displayResults(letterInput.value.toUpperCase(), letter); // Reset results
+    event.preventDefault(); // Prevent duplicate input
+  } else {
+    // If less than 1 second, dynamically filter by the full input
+    setTimeout(() => {
+      displayResults(letterInput.value.toUpperCase(), categoryInput.value);
+    }, 0);  // Delay slightly to allow for current keypress to register
   }
 
-  lastTypedTime = currentTime; // Update the last typed time
+  lastTypedTime = currentTime; // Update the timestamp of the last keypress
 });
+
 
 
 
