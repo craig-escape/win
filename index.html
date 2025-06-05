@@ -27,7 +27,7 @@
     .controls input,
     .controls button {
       padding: 8px 12px;
-      font-size: 14px;
+      font-size: 1.2vh;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
@@ -46,6 +46,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
+      justify-content: center;
       overflow-y: auto;
       padding: 10px;
       flex: 1;
@@ -57,16 +58,17 @@
       grid-template-columns: auto 1fr 1fr;
       gap: 0;
       padding: 0;
-      flex: 1 1 300px;
-      max-width: 100%;
+      flex: 1 1 auto;
+      max-width: 300px;
+      min-width: 250px;
     }
 
     .letter,
     .category,
     .answer {
-      padding: 5px;
+      padding: 8px;
       border: 1px solid #ccc;
-      font-size: 14px;
+      font-size: 1.8vh;
       display: flex;
       align-items: center;
     }
@@ -90,14 +92,14 @@
 
     @media (max-width: 600px) {
       .letter, .category, .answer {
-        font-size: 12px;
+        font-size: 1.5vh;
       }
     }
   </style>
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="1.14 Enter letter (A-Z)" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)*" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -111,18 +113,17 @@
       const categoryInput = document.getElementById("categoryInput");
       const resultsContainer = document.getElementById("resultsContainer");
 
-      let typingTimer;
       let lastTypedTime = 0;
 
       function alphabetizeData(data) {
         const sortedData = {};
         Object.keys(data)
-          .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
-          .forEach((letter) => {
+          .sort()
+          .forEach(letter => {
             sortedData[letter] = {};
             Object.keys(data[letter])
-              .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
-              .forEach((category) => {
+              .sort()
+              .forEach(category => {
                 sortedData[letter][category] = data[letter][category];
               });
           });
@@ -136,14 +137,11 @@
 
         const filteredData = {};
         if (sortedData[letter]) {
-          Object.keys(sortedData[letter]).forEach((category) => {
-            if (
-              !categoryFilter ||
-              category.toLowerCase().includes(categoryFilter.toLowerCase())
-            ) {
+          for (const category of Object.keys(sortedData[letter])) {
+            if (!categoryFilter || category.toLowerCase().includes(categoryFilter.toLowerCase())) {
               filteredData[category] = sortedData[letter][category];
             }
-          });
+          }
         }
 
         const sortedCategories = Object.keys(filteredData);
@@ -152,13 +150,13 @@
           return;
         }
 
-        const totalItems = sortedCategories.length;
-        const screenWidth = window.innerWidth;
-        const approxColumnWidth = 300;
-        const maxColumns = Math.max(1, Math.floor(screenWidth / approxColumnWidth));
-        const columns = Math.min(maxColumns, totalItems);
-        const rowsPerColumn = Math.ceil(totalItems / columns);
+        // Estimate number of rows per column based on screen height
+        const screenHeight = window.innerHeight;
+        const rowHeight = 50; // approximate cell height
+        const maxRowsPerCol = Math.floor((screenHeight - 100) / rowHeight); // minus header
+        const columns = Math.ceil(sortedCategories.length / maxRowsPerCol);
 
+        const rowsPerColumn = Math.ceil(sortedCategories.length / columns);
         let lastLetter = "";
 
         for (let i = 0; i < columns; i++) {
@@ -167,7 +165,7 @@
 
           sortedCategories
             .slice(i * rowsPerColumn, (i + 1) * rowsPerColumn)
-            .forEach((category) => {
+            .forEach(category => {
               const currentLetter = category[0].toUpperCase();
               const letterDiv = document.createElement("div");
               letterDiv.className = "letter";
@@ -178,26 +176,23 @@
                 letterDiv.textContent = " ";
               }
 
-              gridDiv.appendChild(letterDiv);
               lastLetter = currentLetter;
 
-              const categoryCell = document.createElement("div");
-              categoryCell.className = "category";
-              categoryCell.textContent = category;
-              gridDiv.appendChild(categoryCell);
+              const categoryDiv = document.createElement("div");
+              categoryDiv.className = "category";
+              categoryDiv.textContent = category;
 
-              const answerCell = document.createElement("div");
-              answerCell.className = "answer";
-              answerCell.textContent = filteredData[category][0] || "N/A";
-              gridDiv.appendChild(answerCell);
+              const answerDiv = document.createElement("div");
+              answerDiv.className = "answer";
+              answerDiv.textContent = filteredData[category][0] || "N/A";
+
+              gridDiv.appendChild(letterDiv);
+              gridDiv.appendChild(categoryDiv);
+              gridDiv.appendChild(answerDiv);
             });
 
           resultsContainer.appendChild(gridDiv);
         }
-
-        document.querySelectorAll(".letter, .category, .answer").forEach((el) => {
-          el.style.height = `15px`;
-        });
       }
 
       letterInput.addEventListener("input", () => {
@@ -213,14 +208,14 @@
 
       categoryInput.addEventListener("keydown", (event) => {
         const currentTime = Date.now();
+
         if (!/^[a-zA-Z0-9]$/.test(event.key) && event.key !== "Backspace" && event.key !== " ") {
           return;
         }
 
         if (event.key === " " || event.key === "Backspace") {
           categoryInput.value = "";
-          const letter = letterInput.value.toUpperCase();
-          displayResults(letter, "");
+          displayResults(letterInput.value.toUpperCase(), "");
           event.preventDefault();
           return;
         }
