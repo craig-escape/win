@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Win</title>
   <style>
     body {
@@ -13,7 +13,6 @@
       flex-direction: column;
       height: 100vh;
     }
-
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -23,83 +22,64 @@
       border-bottom: 1px solid #ddd;
       gap: 10px;
     }
-
-    .controls input,
-    .controls button {
+    .controls input, .controls button {
       padding: 8px 12px;
-      font-size: 1.2vh;
+      font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-
     .controls button {
       background-color: #007BFF;
       color: #fff;
       cursor: pointer;
     }
-
     .controls button:hover {
       background-color: #0056b3;
     }
+.results-container {
+  display: flex;
+  align-items: flex-start; /* Align the grids to the top */
+  overflow-x: auto;
+}
 
-    .results-container {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: center;
-      overflow-y: auto;
-      padding: 10px;
-      flex: 1;
-      gap: 20px;
-    }
-
-    .results {
-      display: grid;
-      grid-template-columns: auto 1fr 1fr;
-      gap: 0;
-      padding: 0;
-      flex: 1 1 auto;
-      max-width: 300px;
-      min-width: 250px;
-    }
-
+.results {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr; /* Adjust as per column requirements */
+  align-items: start; /* Align items in the grid to the top */
+  justify-content: flex-start; /* Ensure content starts from the top-left */
+  gap: 0; /* Remove gaps between rows */
+  padding: 0;
+  border-right: 1px solid #ddd;
+  padding-right: 10px;
+}
     .letter,
     .category,
     .answer {
-      padding: 8px;
+      padding: 5px;
       border: 1px solid #ccc;
-      font-size: 1.8vh;
+      font-size: 14px;
       display: flex;
       align-items: center;
     }
-
     .letter {
       background-color: #ddd;
       font-weight: bold;
       text-align: center;
       color: #333;
     }
-
     .category {
       font-weight: bold;
       text-align: left !important;
     }
-
     .answer {
       text-align: left !important;
       color: #555;
-    }
-
-    @media (max-width: 600px) {
-      .letter, .category, .answer {
-        font-size: 1.5vh;
-      }
     }
   </style>
 </head>
 <body>
   <div class="controls">
-    <input type="text" id="letterInput" maxlength="1" placeholder="Enter letter (A-Z)*" autofocus />
+    <input type="text" id="letterInput" maxlength="1" placeholder="1.14 Enter letter (A-Z)" autofocus />
     <button id="changeLetterButton" style="display: none;">Change Letter</button>
     <input type="text" id="categoryInput" placeholder="Search category" style="display: none;" />
   </div>
@@ -107,152 +87,174 @@
 
   <script src="topics.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const letterInput = document.getElementById("letterInput");
-      const changeLetterButton = document.getElementById("changeLetterButton");
-      const categoryInput = document.getElementById("categoryInput");
-      const resultsContainer = document.getElementById("resultsContainer");
+document.addEventListener("DOMContentLoaded", function () {
+  const letterInput = document.getElementById("letterInput");
+  const changeLetterButton = document.getElementById("changeLetterButton");
+  const categoryInput = document.getElementById("categoryInput");
+  const resultsContainer = document.getElementById("resultsContainer");
 
-      let lastTypedTime = 0;
+  let typingTimer; // Timer for detecting typing pauses
+  let lastTypedTime = 0; // Timestamp of the last keypress
 
-      function alphabetizeData(data) {
-        const sortedData = {};
-        Object.keys(data)
-          .sort()
-          .forEach(letter => {
-            sortedData[letter] = {};
-            Object.keys(data[letter])
-              .sort()
-              .forEach(category => {
-                sortedData[letter][category] = data[letter][category];
-              });
+  // Helper function to alphabetize the data
+  function alphabetizeData(data) {
+    const sortedData = {};
+    Object.keys(data)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+      .forEach((letter) => {
+        sortedData[letter] = {};
+        Object.keys(data[letter])
+          .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+          .forEach((category) => {
+            sortedData[letter][category] = data[letter][category];
           });
-        return sortedData;
-      }
-
-      const sortedData = alphabetizeData(data);
-
-      function displayResults(letter, categoryFilter = "") {
-        resultsContainer.innerHTML = "";
-
-        const filteredData = {};
-        if (sortedData[letter]) {
-          for (const category of Object.keys(sortedData[letter])) {
-            if (!categoryFilter || category.toLowerCase().includes(categoryFilter.toLowerCase())) {
-              filteredData[category] = sortedData[letter][category];
-            }
-          }
-        }
-
-        const sortedCategories = Object.keys(filteredData);
-        if (sortedCategories.length === 0) {
-          resultsContainer.innerHTML = "<p>No results found.</p>";
-          return;
-        }
-
-        // Estimate number of rows per column based on screen height
-        const screenHeight = window.innerHeight;
-        const rowHeight = 50; // approximate cell height
-        const maxRowsPerCol = Math.floor((screenHeight - 100) / rowHeight); // minus header
-        const columns = Math.ceil(sortedCategories.length / maxRowsPerCol);
-
-        const rowsPerColumn = Math.ceil(sortedCategories.length / columns);
-        let lastLetter = "";
-
-        for (let i = 0; i < columns; i++) {
-          const gridDiv = document.createElement("div");
-          gridDiv.className = "results";
-
-          sortedCategories
-            .slice(i * rowsPerColumn, (i + 1) * rowsPerColumn)
-            .forEach(category => {
-              const currentLetter = category[0].toUpperCase();
-              const letterDiv = document.createElement("div");
-              letterDiv.className = "letter";
-
-              if (currentLetter !== lastLetter) {
-                letterDiv.textContent = currentLetter;
-              } else {
-                letterDiv.textContent = " ";
-              }
-
-              lastLetter = currentLetter;
-
-              const categoryDiv = document.createElement("div");
-              categoryDiv.className = "category";
-              categoryDiv.textContent = category;
-
-              const answerDiv = document.createElement("div");
-              answerDiv.className = "answer";
-              answerDiv.textContent = filteredData[category][0] || "N/A";
-
-              gridDiv.appendChild(letterDiv);
-              gridDiv.appendChild(categoryDiv);
-              gridDiv.appendChild(answerDiv);
-            });
-
-          resultsContainer.appendChild(gridDiv);
-        }
-      }
-
-      letterInput.addEventListener("input", () => {
-        const letter = letterInput.value.toUpperCase();
-        if (letter) {
-          displayResults(letter);
-          categoryInput.style.display = "inline-block";
-          categoryInput.focus();
-          letterInput.style.display = "none";
-          changeLetterButton.style.display = "inline-block";
-        }
       });
+    return sortedData;
+  }
 
-      categoryInput.addEventListener("keydown", (event) => {
-        const currentTime = Date.now();
+  const sortedData = alphabetizeData(data); // Ensure the data is always sorted
 
-        if (!/^[a-zA-Z0-9]$/.test(event.key) && event.key !== "Backspace" && event.key !== " ") {
-          return;
-        }
+ function displayResults(letter, categoryFilter = "") {
+  resultsContainer.innerHTML = ""; // Clear previous results
+  const filteredData = {};
 
-        if (event.key === " " || event.key === "Backspace") {
-          categoryInput.value = "";
-          displayResults(letterInput.value.toUpperCase(), "");
-          event.preventDefault();
-          return;
-        }
-
-        if (currentTime - lastTypedTime > 1000) {
-          const letter = event.key.toUpperCase();
-          categoryInput.value = letter;
-          displayResults(letterInput.value.toUpperCase(), letter);
-          event.preventDefault();
-        } else {
-          setTimeout(() => {
-            displayResults(letterInput.value.toUpperCase(), categoryInput.value);
-          }, 0);
-        }
-
-        lastTypedTime = currentTime;
-      });
-
-      changeLetterButton.addEventListener("click", () => {
-        letterInput.value = "";
-        categoryInput.value = "";
-        resultsContainer.innerHTML = "";
-        categoryInput.style.display = "none";
-        letterInput.style.display = "inline-block";
-        changeLetterButton.style.display = "none";
-        letterInput.focus();
-      });
-
-      function adjustResultsHeight() {
-        const controlsHeight = document.querySelector(".controls").offsetHeight;
-        const viewportHeight = window.innerHeight;
-        resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
+  if (sortedData[letter]) {
+    Object.keys(sortedData[letter]).forEach((category) => {
+      // Convert both the category and filter to lowercase for comparison
+      if (
+        (!categoryFilter || category.toLowerCase().includes(categoryFilter.toLowerCase())) &&
+        (!/^[a-zA-Z]$/.test(categoryFilter) || category.toLowerCase().startsWith(categoryFilter.toLowerCase()))
+      ) {
+        filteredData[category] = sortedData[letter][category];
       }
-
-      window.addEventListener("resize", adjustResultsHeight);
-      adjustResultsHeight();
     });
+  }
+
+  const sortedCategories = Object.keys(filteredData);
+  if (sortedCategories.length === 0) {
+    resultsContainer.innerHTML = "<p>No results found.</p>";
+    return;
+  }
+
+  const controlsHeight = document.querySelector(".controls").offsetHeight;
+  const viewportHeight = window.innerHeight;
+  const availableHeight = viewportHeight - controlsHeight;
+  const rowHeight = 15;
+  const totalRows = Math.floor(2 * availableHeight / rowHeight);
+  const rowsPerGrid = Math.ceil(totalRows / 4);
+
+  let gridCount = 0;
+  let lastLetter = "";
+
+  while (gridCount * rowsPerGrid < sortedCategories.length && gridCount < 4) {
+    const gridDiv = document.createElement("div");
+    gridDiv.className = "results";
+    gridDiv.style.justifyContent = "flex-start";
+
+    sortedCategories
+      .slice(gridCount * rowsPerGrid, (gridCount + 1) * rowsPerGrid)
+      .forEach((category) => {
+        const currentLetter = category[0].toUpperCase();
+        const letterDiv = document.createElement("div");
+        letterDiv.className = "letter";
+
+        if (currentLetter !== lastLetter) {
+          letterDiv.textContent = currentLetter;
+          letterDiv.style.backgroundColor = "#ddd";
+        } else {
+          letterDiv.textContent = " ";
+          letterDiv.style.backgroundColor = "transparent";
+        }
+
+        gridDiv.appendChild(letterDiv);
+        lastLetter = currentLetter;
+
+        const categoryCell = document.createElement("div");
+        categoryCell.className = "category";
+        categoryCell.textContent = category;
+        gridDiv.appendChild(categoryCell);
+
+        const answerCell = document.createElement("div");
+        answerCell.className = "answer";
+        answerCell.textContent = filteredData[category][0] || "N/A";
+        gridDiv.appendChild(answerCell);
+      });
+
+    resultsContainer.appendChild(gridDiv);
+    gridCount++;
+  }
+
+  document.querySelectorAll(".letter, .category, .answer").forEach((el) => {
+    el.style.height = ${rowHeight}px;
+  });
+}
+
+
+  letterInput.addEventListener("input", () => {
+    const letter = letterInput.value.toUpperCase();
+    if (letter) {
+      displayResults(letter);
+      categoryInput.style.display = "inline-block";
+      categoryInput.focus();
+      letterInput.style.display = "none";
+      changeLetterButton.style.display = "inline-block";
+    }
+  });
+
+categoryInput.addEventListener("keydown", (event) => {
+  const currentTime = Date.now();
+
+  // Ignore non-alphanumeric and non-space/backspace keys
+  if (!/^[a-zA-Z0-9]$/.test(event.key) && event.key !== "Backspace" && event.key !== " ") {
+    return; // Exit without doing anything for non-matching keys
+  }
+
+  // Space or backspace clears the input and resets to the initial letter's categories
+  if (event.key === " " || event.key === "Backspace") {
+    categoryInput.value = ""; // Clear the input box
+    const letter = letterInput.value.toUpperCase();
+    displayResults(letter, ""); // Reset results to the initial letter
+    event.preventDefault(); // Prevent default space/backspace behavior
+    return;
+  }
+
+  // Check for pause (> 1 second) between key presses
+  if (currentTime - lastTypedTime > 1000) {
+    const letter = event.key.toUpperCase(); // Get the new letter
+    categoryInput.value = letter; // Clear and reset with the new letter
+    displayResults(letterInput.value.toUpperCase(), letter); // Reset results
+    event.preventDefault(); // Prevent duplicate input
+  } else {
+    // If less than 1 second, dynamically filter by the full input
+    setTimeout(() => {
+      displayResults(letterInput.value.toUpperCase(), categoryInput.value);
+    }, 0);  // Delay slightly to allow for current keypress to register
+  }
+
+  lastTypedTime = currentTime; // Update the timestamp of the last keypress
+});
+
+
+  changeLetterButton.addEventListener("click", () => {
+    letterInput.value = "";
+    categoryInput.value = "";
+    resultsContainer.innerHTML = "";
+    categoryInput.style.display = "none";
+    letterInput.style.display = "inline-block";
+    changeLetterButton.style.display = "none";
+    letterInput.focus();
+  });
+
+  function adjustResultsHeight() {
+    const controlsHeight = document.querySelector(".controls").offsetHeight;
+    const viewportHeight = window.innerHeight;
+    resultsContainer.style.height = ${viewportHeight - controlsHeight}px;
+  }
+
+  window.addEventListener("resize", adjustResultsHeight);
+  adjustResultsHeight();
+});
+
   </script>
 </body>
 </html>
