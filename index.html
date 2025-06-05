@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   document.querySelectorAll(".letter, .category, .answer").forEach((el) => {
-    el.style.height = ${rowHeight}px;
+    el.style.height = `${rowHeight}px`;
   });
 }
 
@@ -248,7 +248,7 @@ categoryInput.addEventListener("keydown", (event) => {
   function adjustResultsHeight() {
     const controlsHeight = document.querySelector(".controls").offsetHeight;
     const viewportHeight = window.innerHeight;
-    resultsContainer.style.height = ${viewportHeight - controlsHeight}px;
+    resultsContainer.style.height = `${viewportHeight - controlsHeight}px`;
   }
 
   window.addEventListener("resize", adjustResultsHeight);
